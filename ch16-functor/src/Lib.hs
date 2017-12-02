@@ -1,11 +1,16 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE DeriveFunctor #-}
 
 module Lib
     ( someFunc
     , fmapApp
     , fmapFM
+    , Fdd(..)
+    , Fd(..)
+    , brokenIdLaw
+    , brokenCompositionLaw
     ) where
 
 someFunc :: IO ()
@@ -83,3 +88,63 @@ f2 = undefined
 -- c :: * -> * -> *
 f3 :: c a b -> c b a
 f3 = undefined
+
+
+---------------
+
+-- Function application:
+--   ($) :: (a -> b) -> a -> b
+
+-- Function application "over"/"through" a 'container'.
+-- lifts a function over abstract structure.
+--  fmap :: (a -> b) -> f a -> f b
+-- (<$>) :: (a -> b) -> f a -> f b
+
+
+data Fd a =
+    Em
+  | Fd a
+  | Cm
+  deriving (Show, Eq)
+
+instance Prelude.Functor Fd where
+  fmap _ Em = Em
+  fmap _ Cm = Cm
+  fmap f (Fd a) = Fd $ f a
+
+
+data Fdd a =
+    Emm
+  | Fdd a
+  | Cmm
+  deriving (Show, Eq, Prelude.Functor) -- DeriveFunctor
+
+--- Breaking identity law...
+
+data BadF a =
+    Yep
+  | Ahr
+  | Moo a
+  deriving (Show, Eq)
+
+instance Prelude.Functor BadF where
+  fmap _ Yep = Ahr
+  fmap _ Ahr = Yep
+  fmap f (Moo a) = Moo $ f a
+
+brokenIdLaw = (Prelude.fmap id Yep) == (id @(BadF Int) Yep)
+
+--- Another bad functor that breaks composition law...
+
+data BadCount a =
+  Heisenberg Int a
+  deriving (Eq, Show)
+
+instance Prelude.Functor BadCount where
+  fmap f (Heisenberg n a) = Heisenberg (n+1) (f a)
+
+brokenCompositionLaw =
+  let f = (++ " some")
+      g = (++ " value")
+      h = Heisenberg 0 "yep"
+  in (Prelude.fmap f . Prelude.fmap g) h == Prelude.fmap (f . g) h
