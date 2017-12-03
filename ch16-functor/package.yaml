@@ -28,3 +28,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - functor
+    - QuickCheck
+    - hspec
