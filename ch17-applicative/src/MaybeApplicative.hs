@@ -98,3 +98,10 @@ mkPersonL :: String
           -> Maybe PersonL
 mkPersonL n a g =
   PersonL <$> mkName n <*> mkAddress a <*> mkAge g
+
+
+----------------------------------------
+
+ex1 = const <$> Just "Hello" <*> pure "World"
+
+ex2 = (,,,) <$> Just 90 <*> Just 10 <*> Just "Tierness" <*> Just [1, 2, 3]
