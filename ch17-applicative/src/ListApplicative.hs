@@ -2,6 +2,7 @@
 
 module ListApplicative where
 
+import Data.List (elemIndex)
 import Control.Applicative
 
 -- f ~ []
@@ -107,3 +108,43 @@ m x =
 -- > (++) <$> getLine <*> getLine
 -- > (,) <$> getLine <*> getLine
 --
+
+
+added :: Maybe Integer
+added = (+3) <$> lookup 3 (zip [1, 2, 3] [4, 5, 6])
+
+
+y :: Maybe Integer
+y = lookup 3 $ zip [1, 2, 3] [4, 5, 6]
+
+z :: Maybe Integer
+z = lookup 2 $ zip [1, 2, 3] [4, 5, 6]
+
+tupled :: Maybe (Integer, Integer)
+tupled = liftA2 (,) y z
+
+
+xp :: Maybe Int
+xp = elemIndex 3 [1, 2, 3, 4, 5]
+
+yp :: Maybe Int
+yp = elemIndex 4 [1, 2, 3, 4, 5]
+
+max' :: Int -> Int -> Int
+max' = max
+
+maxed :: Maybe Int
+maxed = liftA2 max' xp yp
+
+
+xs = [1, 2, 3]
+ys = [4, 5, 6]
+
+xr :: Maybe Integer
+xr = lookup 3 $ zip xs ys
+
+yr :: Maybe Integer
+yr = lookup 2 $ zip xs ys
+
+summed :: Maybe Integer
+summed = sum <$> liftA2 (,) xr yr
