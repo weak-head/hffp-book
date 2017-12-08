@@ -13,9 +13,30 @@ instance Applicative List where
   -- a -> f a
   pure x = Cons x Nil
   -- f (a -> b) -> f a -> f b
+  -- > (<*>) fs xs = [f x | f <- fs, x <- xs]
   (<*>) Nil _ = Nil
   (<*>) _ Nil = Nil
-  (<*>) (Cons f fs) xs = conc (f <$> xs) (fs <*> xs)
+  --(<*>) (Cons f fs) xs = conc (f <$> xs) (fs <*> xs)
+  --(<*>) fs xs = fold (\v -> conc (fmap v xs)) Nil fs
+  (<*>) fs xs = flatMap ($xs) (fmap fmap fs)
+
+-- mapping single value over multiple functions
+-- > map ($x) fs
+-- > map ($4) [(+2), (*3)]
+--
+-- mapping a bunch of values over bunch of functions
+-- > concatMap ($xs) fs
+--
+--
+-- > f = (^2)
+-- > g = (+10)
+--
+-- concatMap ($ [1,2,3,4,10]) [(f <$>), (g <$>) . tail . reverse]
+--
+-- ~
+--
+-- concat $ [(f <$>), (g <$>) . tail . reverse] <*> [[1,2,3,4,10]]
+--
 
 conc :: List a -> List a -> List a
 conc Nil v = v
