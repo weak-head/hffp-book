@@ -80,8 +80,6 @@ instance Applicative ZipList' where
 
 ---
 
-
-
 zl' = ZipList'
 z  = zl' $ toList' [(+9), (*2), (+8)]
 z' = zl' $ toList' [1..3]
@@ -94,7 +92,7 @@ fz' = z <*> z''
 
 
 instance Arbitrary a => Arbitrary (List a) where
-  arbitrary = undefined
+  arbitrary = toList' <$> arbitrary
 
 instance Arbitrary a => Arbitrary (ZipList' a) where
   arbitrary = ZipList' <$> arbitrary
