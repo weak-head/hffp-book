@@ -10,14 +10,32 @@ data List a =
   deriving (Eq, Show)
 
 take' :: Int -> List a -> List a
-take' = undefined
+take' n (Cons x xs)
+  | n > 0     = Cons x (take' (n-1) xs)
+  | otherwise = Nil
+take' _ Nil = Nil
+
+foldr' :: (a -> b -> b) -> b -> List a -> b
+foldr' _ v Nil         = v
+foldr' f v (Cons x xs) = f x (foldr' f v xs)
+
+conc' :: List a -> List a -> List a
+conc' Nil x = x
+conc' (Cons x xs) ys = Cons x (conc' xs ys)
+
+flat' :: List (List a) -> List a
+flat' = foldr' conc' Nil
+
+flatMap' :: (a -> List b) -> List a -> List b
+flatMap' f = flat' . fmap f
 
 instance Functor List where
-  fmap = undefined
+  fmap _ Nil         = Nil
+  fmap f (Cons x xs) = Cons (f x) (fmap f xs)
 
 instance Applicative List where
-  pure = undefined
-  (<*>) = undefined
+  pure x      = Cons x Nil
+  (<*>) fs xs = undefined
 
 
 newtype ZipList' a =
