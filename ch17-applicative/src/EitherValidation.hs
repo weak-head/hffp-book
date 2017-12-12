@@ -52,7 +52,7 @@ data Errors =
   deriving (Eq, Show)
 
 success =   Success (+1)
-        <*> Success 1
+        <*> Success 1 :: Validation String Int
 -- success = Success 2
 
 failure =   Success (+1)
