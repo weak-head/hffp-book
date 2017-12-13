@@ -16,7 +16,7 @@ instance (Arbitrary a, Arbitrary b) => Arbitrary (E.Validation a b) where
 instance (Eq a, Eq b) => EqProp (E.Validation a b) where
   (=-=) = eq
 
-aplTst = quickBatch $ applicative a
+validTst = quickBatch $ applicative a
   where
     a :: E.Validation String (Int, Int, Int)
     a = undefined
