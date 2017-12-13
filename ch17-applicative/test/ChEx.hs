@@ -82,3 +82,31 @@ twoChecker = quickBatch $ applicative a
     a = undefined
 
 ----------------------------------------------------------------------
+
+data Three a b c =
+  Three a b c
+  deriving (Eq, Show)
+
+instance Functor (Three a b) where
+  fmap f (Three a b c) = Three a b (f c)
+
+instance (Monoid a, Monoid b) => Applicative (Three a b) where
+  pure x = Three mempty mempty x
+  (<*>) (Three a b f) (Three a' b' v) = Three (a <> a') (b <> b') (f v)
+
+instance (Eq a, Eq b, Eq c) => EqProp (Three a b c) where
+  (=-=) = eq
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c) => Arbitrary (Three a b c) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    return $ Three a b c
+
+threeChecker = quickBatch $ applicative a
+  where
+    a :: Three String String (Int, String, Bool)
+    a = undefined
+
+----------------------------------------------------------------------
