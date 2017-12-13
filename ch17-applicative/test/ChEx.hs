@@ -138,3 +138,34 @@ threeCheck = quickBatch $ applicative a
     a = undefined
 
 ----------------------------------------------------------------------
+
+data Four a b c d =
+  Four a b c d
+  deriving (Show, Eq)
+
+instance Functor (Four a b c) where
+  fmap f (Four a b c d) = Four a b c (f d)
+
+instance (Monoid a, Monoid b, Monoid c) => Applicative (Four a b c) where
+  pure x = Four mempty mempty mempty x
+  (<*>) (Four a b c f) (Four a' b' c' v) =
+    Four (a <> a') (b <> b') (c <> c') (f v)
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c, Arbitrary d) =>
+         Arbitrary (Four a b c d) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    d <- arbitrary
+    return $ Four a b c d
+
+instance (Eq a, Eq b, Eq c, Eq d) => EqProp (Four a b c d) where
+  (=-=) = eq
+
+fourCheck = quickBatch $ applicative a
+  where
+    a :: Four String String String (String, Int, Bool)
+    a = undefined
+
+----------------------------------------------------------------------
