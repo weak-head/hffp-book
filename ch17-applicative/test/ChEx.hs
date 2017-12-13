@@ -4,6 +4,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Checkers
 import Test.QuickCheck.Classes
 
+import Control.Applicative
 import Data.Monoid
 
 {-
@@ -197,3 +198,16 @@ fourCheck' = quickBatch $ applicative a
   where
     a :: Four' String (String, Int, Bool)
     a = undefined
+
+----------------------------------------------------------------------
+
+stops :: String
+stops = "pbtdkg"
+
+vowels :: String
+vowels = "aeiou"
+
+combos :: [a] -> [b] -> [c] -> [(a, b, c)]
+combos a b c = liftA3 (,,) a b c
+
+gocom = combos vowels stops vowels
