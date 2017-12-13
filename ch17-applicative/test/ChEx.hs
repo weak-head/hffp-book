@@ -169,3 +169,31 @@ fourCheck = quickBatch $ applicative a
     a = undefined
 
 ----------------------------------------------------------------------
+
+data Four' a b =
+  Four' a a a b
+  deriving (Eq, Show)
+
+instance Functor (Four' a) where
+  fmap f (Four' a b c d) = Four' a b c (f d)
+
+instance Monoid a => Applicative (Four' a) where
+  pure x = Four' mempty mempty mempty x
+  (<*>) (Four' s1 s2 s3 f) (Four' s1' s2' s3' v) =
+    Four' (s1 <> s1') (s2 <> s2') (s3 <> s3') (f v)
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Four' a b) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    c <- arbitrary
+    d <- arbitrary
+    return $ Four' a b c d
+
+instance (Eq a, Eq b) => EqProp (Four' a b) where
+  (=-=) = eq
+
+fourCheck' = quickBatch $ applicative a
+  where
+    a :: Four' String (String, Int, Bool)
+    a = undefined
