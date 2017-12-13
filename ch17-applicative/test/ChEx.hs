@@ -4,6 +4,8 @@ import Test.QuickCheck
 import Test.QuickCheck.Checkers
 import Test.QuickCheck.Classes
 
+import Data.Monoid
+
 {-
 
 1. []
@@ -50,6 +52,33 @@ instance Eq a => EqProp (Pair a) where
 pairChecker = quickBatch $ applicative a
   where
     a :: Pair (Int, String, Bool)
+    a = undefined
+
+----------------------------------------------------------------------
+
+data Two a b =
+  Two a b
+  deriving (Show, Eq)
+
+instance Functor (Two a) where
+  fmap f (Two a b) = Two a (f b)
+
+instance Monoid a => Applicative (Two a) where
+  pure x = Two mempty x
+  (<*>) (Two s f) (Two s' v) = Two (s <> s') (f v)
+
+instance (Eq a, Eq b) => EqProp (Two a b) where
+  (=-=) = eq
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Two a b) where
+  arbitrary = do
+    a <- arbitrary
+    b <- arbitrary
+    return $ Two a b
+
+twoChecker = quickBatch $ applicative a
+  where
+    a :: Two String (Int, String, Bool)
     a = undefined
 
 ----------------------------------------------------------------------
