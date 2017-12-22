@@ -1,6 +1,7 @@
 module DoSyntax where
 
 import Data.Maybe
+import Control.Monad (join)
 
 -- (*>) :: Applicative f => f a -> f b -> f b
 -- (>>) :: Monad m       => m a -> m b -> m b
@@ -73,3 +74,53 @@ h = putStrLn <$> getLine
 -- [1] -> effect 'getLine' must perform to get a String
 -- [2] -> effect that would be performed if 'putStrLn' was evaluated
 -- [3] -> return of the 'putStrLn'
+
+--------------------------------------------------
+
+pOne = putStrLn "1"
+pTwo = putStrLn "2"
+twoA = (pOne, pTwo)
+-- > :t twoA
+-- twoA :: (IO (), IO ())
+--
+-- > fst twoA
+-- > snd twoA
+-- > fst twoA
+
+
+-- Now, with join, this will work as expected.
+h' :: IO ()
+h' = join $ putStrLn <$> getLine
+
+--------------------------------------------------
+
+bindingAndSequencing :: IO ()
+bindingAndSequencing = do
+  putStrLn "name pls:"
+  name <- getLine
+  putStrLn ("wup " ++ name)
+
+bindingAndSequencing' :: IO ()
+bindingAndSequencing' =
+  putStrLn "name pls:" >>
+  getLine >>=
+  putStrLn . ("wup " ++)
+
+
+-- two binds
+
+twoBinds :: IO ()
+twoBinds = do
+  putStrLn "name pls:"
+  name <- getLine
+  putStrLn "age pls:"
+  age <- getLine
+  putStrLn ("wup " ++ name ++ " ror " ++ age ++ " old")
+
+twoBinds' :: IO ()
+twoBinds' =
+  putStrLn "name pls:" >>
+  getLine >>=
+  (\n -> putStrLn "agePls" >>
+         getLine >>=
+         (\a -> putStrLn ("wup " ++ n ++ " ror " ++ a ++ " old")))
