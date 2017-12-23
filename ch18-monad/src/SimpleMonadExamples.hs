@@ -76,3 +76,29 @@ mkSphericalCow name' age' weight' =
             Nothing -> Nothing
             Just weighty ->
               weightCheck (Cow nammy agey weighty)
+
+-- We cannot do this with 'Applicative', because
+-- 'weightCheck' depends on the prior existence of a
+-- 'Cow' value and return more manadic structure.
+mkSphericalCow' :: String -> Int -> Int -> Maybe Cow
+mkSphericalCow' name' age' weight' = do
+  nammy <- noEmpty name'
+  agey <- noNegative age'
+  weighty <- noNegative weight'
+  weightCheck (Cow nammy agey weighty)
+
+-- > mkSphericalCow' "Bess" 5 500
+-- Nothing
+--
+-- > mkSphericalCow' "Bess" 5 499
+-- Just (Cow {name = "Bess", age = 5, weight = 499})
+
+mkSphericalCow'' :: String -> Int -> Int -> Maybe Cow
+mkSphericalCow'' name' age' weight' =
+  noEmpty name' >>=
+  \nammy ->
+    noNegative age' >>=
+    \agey ->
+      noNegative weight' >>=
+      \weighty ->
+        weightCheck (Cow nammy agey weighty)
