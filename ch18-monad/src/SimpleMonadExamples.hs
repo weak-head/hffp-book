@@ -1,6 +1,7 @@
 module SimpleMonadExamples where
 
 import Data.Bool
+import Control.Applicative (liftA3)
 
 -------- List --------------------------------------------------------
 -- (>>=) :: Monad m
@@ -102,3 +103,63 @@ mkSphericalCow'' name' age' weight' =
       noNegative weight' >>=
       \weighty ->
         weightCheck (Cow nammy agey weighty)
+
+----------------------------------------------------------------------
+
+--
+-- this could be rewritten using 'Applicative'
+doSomething :: Monad m => m t2 -> m t1 -> m t -> m (t2, t1, t)
+doSomething f g h = do
+  a <- f
+  b <- g
+  c <- h
+  pure (a, b, c)
+--
+-- like this
+doSomethingA :: Applicative f => f a -> f b -> f c -> f (a, b, c)
+doSomethingA = liftA3 (,,)
+
+-- but for this case, we cannot use 'Applicative' directly.
+-- 'g' and  'h' are producing  monadic structure based on  values that
+-- can only be obtained by  depending on values generated from monadic
+-- struture.
+doSomething' ::
+  Monad m =>
+  t3 -> (t3 -> m t2) -> (t2 -> m t1) -> (t1 -> m t) -> m (t2, t1, t)
+doSomething' n f g h = do
+  a <- f n
+  b <- g a
+  c <- h b
+  pure (a, b, c)
+
+-- and it's same as:
+doSomethingU' ::
+  Monad m =>
+  t3 -> (t3 -> m t2) -> (t2 -> m t1) -> (t1 -> m t) -> m (t2, t1, t)
+doSomethingU' n f g h =
+  f n >>=
+  \a ->
+    g a >>=
+    \b ->
+      h b >>=
+      \c -> pure (a, b, c)
+
+
+f' :: Integer -> Maybe Integer
+f' 0 = Nothing
+f' n = Just n
+
+g' :: Integer -> Maybe Integer
+g' i | even i    = Just (i + 1)
+     | otherwise = Nothing
+
+h' :: Integer -> Maybe String
+h' i = Just ("10191" ++ show i)
+
+doSmtCt n = do
+  a <- f' n
+  b <- g' a
+  c <- h' b
+  pure (a, b, c)
+
+----------------------------------------------------------------------
