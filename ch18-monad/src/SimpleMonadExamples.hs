@@ -28,4 +28,51 @@ twiceWhenEven' xs = do
   if even x
     then [x*x, x*x]
     else []
-----------------------------------------------------------------------
+
+----------- Maybe ----------------------------------------------------
+
+-- (>>=) :: Monad m
+--       => m     a -> (a -> m     b) -> m     b
+-- (>>=) :: Maybe a -> (a -> Maybe b) -> Maybe b
+
+-- return :: Monad m => a -> m a
+-- return :: a -> Maybe a
+
+data Cow =
+  Cow
+  { name :: String
+  , age :: Int
+  , weight :: Int
+  } deriving (Eq, Show)
+
+noEmpty :: String -> Maybe String
+noEmpty ""  = Nothing
+noEmpty str = Just str
+
+noNegative :: Int -> Maybe Int
+noNegative n | n > 0 = Just n
+             | otherwise = Nothing
+
+weightCheck :: Cow -> Maybe Cow
+weightCheck c =
+  let w = weight c
+      n = name c
+  in if n == "Bess" && w > 499
+     then Nothing
+     else Just c
+
+mkSphericalCow :: String
+               -> Int
+               -> Int
+               -> Maybe Cow
+mkSphericalCow name' age' weight' =
+  case noEmpty name' of
+    Nothing -> Nothing
+    Just nammy ->
+      case noNegative age' of
+        Nothing -> Nothing
+        Just agey ->
+          case noNegative weight' of
+            Nothing -> Nothing
+            Just weighty ->
+              weightCheck (Cow nammy agey weighty)
