@@ -163,3 +163,16 @@ doSmtCt n = do
   pure (a, b, c)
 
 ----------------------------------------------------------------------
+
+-- instance Monad Maybe where
+--   return x       = Just x
+--   (Just x) >>= k = k x
+--   Nothing  >>= _ = Nothing
+
+-- > Nothing >>= undefined
+-- Nothing
+--
+-- > Just 1 >>= undefined
+-- *** Exception: Prelude.undefined
+
+----------------------------------------------------------------------
