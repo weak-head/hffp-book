@@ -28,3 +28,6 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - monad
+    - hspec
+    - checkers
+    - QuickCheck
