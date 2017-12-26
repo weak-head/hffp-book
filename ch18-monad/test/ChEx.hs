@@ -19,6 +19,10 @@ spec = parallel $ do
     testBatch (functor (undefined :: MEither Int (Int, Int, Int)))
     testBatch (applicative (undefined :: MEither String (Int, Bool, String)))
     testBatch (monad (undefined :: MEither Bool (Int, String, String)))
+  describe "Identity" $ do
+    testBatch (functor (undefined :: Identity (Int, Int, Int)))
+    testBatch (applicative (undefined :: Identity (Int, Bool, String)))
+    testBatch (monad (undefined :: Identity (Int, String, String)))
 
 
 --- Nope instance ----------------------------------------------------
@@ -73,3 +77,25 @@ instance (Arbitrary a, Arbitrary b) => Arbitrary (MEither b a) where
   arbitrary =
     frequency [ (1, MLeft <$> arbitrary)
               , (1, MRight <$> arbitrary) ]
+
+--- Identity instance ------------------------------------------------
+
+newtype Identity a = Identity a
+  deriving (Eq, Ord, Show)
+
+instance Functor Identity where
+  fmap f (Identity x) = Identity (f x)
+
+instance Applicative Identity where
+  pure = Identity
+  (<*>) (Identity f) (Identity v) = Identity (f v)
+
+instance Monad Identity where
+  return = pure
+  (>>=) (Identity v) f = f v
+
+instance Eq a => EqProp (Identity a) where
+  (=-=) = eq
+
+instance Arbitrary a => Arbitrary (Identity a) where
+  arbitrary = Identity <$> arbitrary
