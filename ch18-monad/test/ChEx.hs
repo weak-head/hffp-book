@@ -1,11 +1,12 @@
 module ChEx where
 
+import Control.Applicative (liftA2)
+import Control.Monad (join, liftM2)
 import Test.Hspec
 import Test.Hspec.Checkers
 import Test.QuickCheck
 import Test.QuickCheck.Checkers
 import Test.QuickCheck.Classes
-import Control.Applicative (liftA2)
 
 main :: IO ()
 main = hspec spec
@@ -163,3 +164,36 @@ instance Arbitrary a => Arbitrary (List a) where
       genList c f
         | c <= 0 = pure Nil
         | otherwise = liftA2 Cons f (genList (c-1) f)
+
+----------------------------------------------------------------------
+
+j :: Monad m => m (m a) -> m a
+j = join
+
+l1 :: Monad m => (a -> b) -> m a -> m b
+l1 = fmap
+
+l2 :: Monad m => (a -> b -> c) -> m a -> m b -> m c
+l2 = liftM2
+
+a :: Monad m => m a -> m (a -> b) -> m b
+a m f = f <*> m
+
+meh :: Monad m => [a] -> (a -> m b) -> m [b]
+meh []     _ = return []
+meh (x:xs) f = do
+  b <- f x
+  fmap (b:) (meh xs f)
+
+-- flip mapM
+meh' :: Monad m => [a] -> (a -> m b) -> m [b]
+meh' xs f = foldr ev (return []) xs
+  where
+    ev v a = do
+      h <- f v
+      t <- a
+      return (h:t)
+
+-- sequence
+flipType :: (Monad m) => [m a] -> m [a]
+flipType xs = meh' xs id
