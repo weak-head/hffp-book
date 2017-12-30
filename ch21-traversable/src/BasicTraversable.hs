@@ -54,3 +54,25 @@ ts9 = sum $ catMaybes [Just 1, Just 2, Just 3, Nothing]
 
 ts10 = fmap sum $ sequenceA [Just 1, Just 2, Just 3, Nothing]
 -- Nothing
+
+--- traverse ---------------------------------------------------------
+
+-- fmap     :: (a ->   b) -> f a -> f b
+-- (=<<)    :: (a -> m b) -> m a -> m b
+-- traverse :: (a -> f b) -> t a -> f (t b)
+
+
+-- > fmap Just [1, 2, 3]
+-- [Just 1, Just 2, Just 3]
+--
+-- > sequenceA $ fmap Just [1, 2, 3]
+-- Just [1, 2, 3]
+--
+-- > sequenceA . fmap Just $ [1, 2, 3]
+-- Just [1, 2, 3]
+--
+tt1 = traverse Just [1, 2, 3]
+-- Just [1, 2, 3]
+
+-- mapM     :: Monad m       => (a -> m b) -> [a] -> m [b]
+-- traverse :: Applicative f => (a -> f b) -> t a -> f (t b)
