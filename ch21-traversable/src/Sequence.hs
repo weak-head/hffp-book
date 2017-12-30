@@ -41,4 +41,26 @@ Lets follow the types:
 
  ((sequence .) . fmap) :: (Monad m, Traversable t)
                        => (a -> m b) -> t a -> m (t b)
+
+--
+
+ so it is same as:
+   (sequence .) . fmap =
+      \f xs -> sequence (fmap f xs)
+
+
+ in contrast:
+   (sequence . fmap) =
+      \f -> sequence (fmap f)
+
+
+ similar example:
+   (join .) . fmap
+
+--
+
+traverse ~ (sequence .) . fmap
+(>>=)    ~ (join .) . fmap
+
+
 -}
