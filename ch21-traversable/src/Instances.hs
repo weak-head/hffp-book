@@ -31,3 +31,28 @@ instance Foldable (E a) where
 instance Traversable (E a) where
   traverse _ (L e) = pure $ L e
   traverse f (R v) = fmap R (f v)
+
+--- Product ----------------------------------------------------------
+
+data P a b =
+  P a b
+  deriving (Show, Eq, Ord)
+
+instance Functor (P a) where
+  fmap f (P a b) = P a (f b)
+
+instance Monoid a => Applicative (P a) where
+  pure x = P mempty x
+  (<*>) (P s f) (P s' v) = P (s `mappend` s') (f v)
+
+instance Monoid a => Monad (P a) where
+  return = pure
+  (>>=) (P s v) f = let (P s' v') = f v
+                    in P (s `mappend` s') v'
+
+instance Foldable (P a) where
+  foldMap f (P _ v) = f v
+  foldr f d (P _ v) = f v d
+
+instance Traversable (P a) where
+  traverse f (P a b) = fmap (P a) (f b)
