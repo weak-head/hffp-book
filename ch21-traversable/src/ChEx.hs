@@ -41,7 +41,7 @@ instance Foldable (Constant a) where
   foldr _ d _ = d
 
 instance Traversable (Constant a) where
-  traverse f (Constant a) = pure $ Constant a
+  traverse _ (Constant a) = pure $ Constant a
 
 instance Arbitrary a => Arbitrary (Constant a b) where
   arbitrary = Constant <$> arbitrary
@@ -52,3 +52,35 @@ instance (Eq a) => EqProp (Constant a b) where
 constantQB = do
   quickBatch (functor (undefined :: Constant Int (Int, Int, [Int])))
   quickBatch (traversable (undefined :: Constant Int (Int, Int, [Int])))
+
+--- Maybe ------------------------------------------------------------
+
+data Opt a =
+    N
+  | Y a
+  deriving (Show, Eq, Ord)
+
+instance Functor Opt where
+  fmap _  N    = N
+  fmap f (Y a) = Y $ f a
+
+instance Foldable Opt where
+  foldr _ d  N    = d
+  foldr f d (Y v) = f v d
+
+instance Traversable Opt where
+  traverse _  N    = pure N
+  traverse f (Y v) = Y <$> f v
+
+instance Arbitrary a => Arbitrary (Opt a) where
+  arbitrary =
+    frequency [ (1, return N)
+              , (3, Y <$> arbitrary)
+              ]
+
+instance Eq a => EqProp (Opt a) where
+  (=-=) = eq
+
+maybeQB = do
+  quickBatch (functor (undefined :: Opt (Int, Int, [Int])))
+  quickBatch (traversable (undefined :: Opt (Int, Int, [Int])))
