@@ -1,5 +1,6 @@
 module Instances where
 
+import Data.Monoid
 import Control.Applicative (liftA2)
 import Test.QuickCheck
 import Test.QuickCheck.Checkers
@@ -45,7 +46,7 @@ instance (Arbitrary a, Arbitrary b) => Arbitrary (E a b) where
 instance (Eq a, Eq b) => EqProp (E a b) where
   (=-=) = eq
 
-qbatch = do
+qCoProductBatch = do
   let sut = (undefined :: E (Int) (Int, Int, [Int]))
   quickBatch (functor sut)
   quickBatch (applicative sut)
@@ -77,3 +78,16 @@ instance Foldable (P a) where
 
 instance Traversable (P a) where
   traverse f (P a b) = fmap (P a) (f b)
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (P a b) where
+  arbitrary = liftA2 P arbitrary arbitrary
+
+instance (Eq a, Eq b) => EqProp (P a b) where
+  (=-=) = eq
+
+qProductBatch = do
+  let sut = (undefined :: P (Sum Int) (Int, Int, [Int]))
+  quickBatch (functor sut)
+  quickBatch (applicative sut)
+  quickBatch (monad sut)
+  quickBatch (traversable sut)
