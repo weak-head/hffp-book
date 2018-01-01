@@ -1,5 +1,10 @@
 module Instances where
 
+import Control.Applicative (liftA2)
+import Test.QuickCheck
+import Test.QuickCheck.Checkers
+import Test.QuickCheck.Classes
+
 --- Either -----------------------------------------------------------
 
 data E a b =
@@ -31,6 +36,22 @@ instance Foldable (E a) where
 instance Traversable (E a) where
   traverse _ (L e) = pure $ L e
   traverse f (R v) = fmap R (f v)
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (E a b) where
+  arbitrary =
+    frequency [ (1, L <$> arbitrary)
+              , (1, R <$> arbitrary) ]
+
+instance (Eq a, Eq b) => EqProp (E a b) where
+  (=-=) = eq
+
+qbatch = do
+  let sut = (undefined :: E (Int) (Int, Int, [Int]))
+  quickBatch (functor sut)
+  quickBatch (applicative sut)
+  quickBatch (monad sut)
+  quickBatch (traversable sut)
+
 
 --- Product ----------------------------------------------------------
 
