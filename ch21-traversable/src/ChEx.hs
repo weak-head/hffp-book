@@ -1,5 +1,7 @@
 module ChEx where
 
+import Control.Applicative (liftA2)
+
 import Test.QuickCheck
 import Test.QuickCheck.Checkers
 import Test.QuickCheck.Classes
@@ -84,3 +86,37 @@ instance Eq a => EqProp (Opt a) where
 maybeQB = do
   quickBatch (functor (undefined :: Opt (Int, Int, [Int])))
   quickBatch (traversable (undefined :: Opt (Int, Int, [Int])))
+
+--- List -------------------------------------------------------------
+
+data List a =
+    Nil
+  | Cons a (List a)
+  deriving (Show, Eq)
+
+instance Functor List where
+  fmap _ Nil = Nil
+  fmap f (Cons x xs) = Cons (f x) (fmap f xs)
+
+instance Foldable List where
+  foldr _ d Nil = d
+  foldr f d (Cons x xs) = f x (foldr f d xs)
+
+instance Traversable List where
+  traverse  = (sequenceA .) . fmap
+  sequenceA = foldr (liftA2 Cons) (pure Nil)
+
+instance Arbitrary a => Arbitrary (List a) where
+  arbitrary = fromL <$> arbitrary
+    where fromL = foldr Cons Nil :: ([a] -> List a)
+
+instance Eq a => EqProp (List a) where
+  (=-=) xs ys =
+    let xs' = take 200 $ toL xs
+        ys' = take 200 $ toL ys
+    in xs' `eq` ys'
+    where toL = foldr (:) []
+
+listQB = do
+  quickBatch (functor (undefined :: List (Int, Int, [Int])))
+  quickBatch (traversable (undefined :: List (Int, Int, [Int])))
