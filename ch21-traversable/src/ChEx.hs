@@ -145,3 +145,28 @@ instance (Eq a, Eq b, Eq c) => EqProp (Three a b c) where
 threeQB = do
   quickBatch (functor (undefined :: Three Int String (Int, Bool, [String])))
   quickBatch (traversable (undefined :: Three Int String (Int, Bool, [String])))
+
+--- Pair -------------------------------------------------------------
+
+data Pair a b =
+  Pair a b
+  deriving (Show, Eq)
+
+instance Functor (Pair a) where
+  fmap f (Pair a b) = Pair a (f b)
+
+instance Foldable (Pair a) where
+  foldr f d (Pair _ b) = f b d
+
+instance Traversable (Pair a) where
+  traverse f (Pair a b) = Pair a <$> f b
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Pair a b) where
+  arbitrary = liftA2 Pair arbitrary arbitrary
+
+instance (Eq a, Eq b) => EqProp (Pair a b) where
+  (=-=) = eq
+
+pairQB = do
+  quickBatch (functor (undefined :: Pair String (Int, Bool, [String])))
+  quickBatch (traversable (undefined :: Pair String (Int, Bool, [String])))
