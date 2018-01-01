@@ -1,6 +1,6 @@
 module ChEx where
 
-import Control.Applicative (liftA2)
+import Control.Applicative (liftA2, liftA3)
 
 import Test.QuickCheck
 import Test.QuickCheck.Checkers
@@ -120,3 +120,28 @@ instance Eq a => EqProp (List a) where
 listQB = do
   quickBatch (functor (undefined :: List (Int, Int, [Int])))
   quickBatch (traversable (undefined :: List (Int, Int, [Int])))
+
+--- Three ------------------------------------------------------------
+
+data Three a b c =
+  Three a b c
+  deriving (Eq, Show)
+
+instance Functor (Three a b) where
+  fmap f (Three a b c) = Three a b (f c)
+
+instance Foldable (Three a b) where
+  foldr f d (Three _ _ c) = f c d
+
+instance Traversable (Three a b) where
+  traverse f (Three a b c) = (Three a b) <$> f c
+
+instance (Arbitrary a, Arbitrary b, Arbitrary c) => Arbitrary (Three a b c) where
+  arbitrary = liftA3 Three arbitrary arbitrary arbitrary
+
+instance (Eq a, Eq b, Eq c) => EqProp (Three a b c) where
+  (=-=) = eq
+
+threeQB = do
+  quickBatch (functor (undefined :: Three Int String (Int, Bool, [String])))
+  quickBatch (traversable (undefined :: Three Int String (Int, Bool, [String])))
