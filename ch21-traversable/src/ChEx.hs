@@ -1,5 +1,6 @@
 module ChEx where
 
+import Data.Monoid ((<>))
 import Control.Applicative (liftA2, liftA3)
 
 import Test.QuickCheck
@@ -196,3 +197,27 @@ bigQB = do
   quickBatch (functor (undefined :: Big String (Int, Bool, [String])))
   quickBatch (traversable (undefined :: Big String (Int, Bool, [String])))
 
+--- Bigger -----------------------------------------------------------
+
+data Bigger a b =
+  Bigger a b b b
+  deriving (Show, Eq)
+
+instance Functor (Bigger a) where
+  fmap f (Bigger a b c d) = Bigger a (f b) (f c) (f d)
+
+instance Foldable (Bigger a) where
+  foldMap f (Bigger _ b c d) = f b <> f c <> f d
+
+instance Traversable (Bigger a) where
+  sequenceA (Bigger a fb fc fd) = liftA3 (Bigger a) fb fc fd
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Bigger a b) where
+  arbitrary = Bigger <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+
+instance (Eq a, Eq b) => EqProp (Bigger a b) where
+  (=-=) = eq
+
+biggerQB = do
+  quickBatch (functor (undefined :: Bigger String (Int, Bool, [String])))
+  quickBatch (traversable (undefined :: Bigger String (Int, Bool, [String])))
