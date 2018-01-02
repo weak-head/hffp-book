@@ -170,3 +170,29 @@ instance (Eq a, Eq b) => EqProp (Pair a b) where
 pairQB = do
   quickBatch (functor (undefined :: Pair String (Int, Bool, [String])))
   quickBatch (traversable (undefined :: Pair String (Int, Bool, [String])))
+
+--- Big --------------------------------------------------------------
+
+data Big a b =
+  Big a b b
+  deriving (Show, Eq)
+
+instance Functor (Big a) where
+  fmap f (Big a b c) = Big a (f b) (f c)
+
+instance Foldable (Big a) where
+  foldMap f (Big _ b c) = f b `mappend` f c
+
+instance Traversable (Big a) where
+  sequenceA (Big a fb fc) = liftA2 (Big a) fb fc
+
+instance (Arbitrary a, Arbitrary b) => Arbitrary (Big a b) where
+  arbitrary = liftA3 Big arbitrary arbitrary arbitrary
+
+instance (Eq a, Eq b) => EqProp (Big a b) where
+  (=-=) = eq
+
+bigQB = do
+  quickBatch (functor (undefined :: Big String (Int, Bool, [String])))
+  quickBatch (traversable (undefined :: Big String (Int, Bool, [String])))
+
