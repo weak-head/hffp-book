@@ -79,8 +79,10 @@ class Foldable_ t where
   foldr_ f d xs = foldMap_ (\a -> f a) xs d
 
   fold_ :: Monoid_ m => t m -> m
+  fold_ = foldMap_ id
 
   foldr_' :: (a -> b -> b) -> b -> t a -> b
+  foldr_' f = foldr_ (\v a -> a `seq` f v a)
 
   foldl_ :: (b -> a -> b) -> b -> t a -> b
 
