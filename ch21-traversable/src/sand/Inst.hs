@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
 module Inst where
@@ -63,13 +65,20 @@ infixr 1 >=>!
 
 --- Foldable ---------------------------------------------------------
 
+instance {-# OVERLAPPING #-} Monoid_ (a -> a) where
+  mempty_ = id
+  mappend_ = (.)
+
 class Foldable_ t where
-  {-# MINIMAL (fold_ | foldMap_)#-}
-  fold_ :: Monoid_ m => t m -> m
+  {-# MINIMAL (foldr_ | foldMap_) #-}
 
   foldMap_ :: Monoid_ m => (a -> m) -> t a -> m
+  foldMap_ f = foldr_ (mappend_ . f) mempty_
 
   foldr_ :: (a -> b -> b) -> b -> t a -> b
+  foldr_ f d xs = foldMap_ (\a -> f a) xs d
+
+  fold_ :: Monoid_ m => t m -> m
 
   foldr_' :: (a -> b -> b) -> b -> t a -> b
 
