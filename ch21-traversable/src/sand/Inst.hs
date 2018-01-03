@@ -83,10 +83,14 @@ class Foldable_ t where
 
   foldr_' :: (a -> b -> b) -> b -> t a -> b
   foldr_' f = foldr_ (\v a -> a `seq` f v a)
+  -- foldr_ (\v a -> "(" ++ show v ++ " f " ++ a ++ ")") "" [1,2,3]
 
   foldl_ :: (b -> a -> b) -> b -> t a -> b
+  foldl_ f d xs = foldr_ (\a g b -> g (f b a)) id xs d
+  -- foldl_ (\a v -> "(" ++ a ++ " f " ++ show v ++ ")") "" [1,2,3]
 
   foldl_' :: (b -> a -> b) -> b -> t a -> b
+  foldl_' f = foldl_' (\a v -> a `seq` f a v)
 
   foldr1 :: (a -> a -> a) -> t a -> a
 
