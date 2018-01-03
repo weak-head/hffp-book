@@ -65,7 +65,7 @@ infixr 1 >=>!
 
 --- Foldable ---------------------------------------------------------
 
-instance {-# OVERLAPPING #-} Monoid_ (a -> a) where
+instance Monoid_ (a -> a) where
   mempty_ = id
   mappend_ = (.)
 
@@ -76,7 +76,7 @@ class Foldable_ t where
   foldMap_ f = foldr_ (mappend_ . f) mempty_
 
   foldr_ :: (a -> b -> b) -> b -> t a -> b
-  foldr_ f d xs = foldMap_ (\a -> f a) xs d
+  foldr_ f d xs = foldMap_ f xs d
 
   fold_ :: Monoid_ m => t m -> m
   fold_ = foldMap_ id
