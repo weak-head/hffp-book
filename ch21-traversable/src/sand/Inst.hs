@@ -39,3 +39,14 @@ class Functor_ f => Applicative_ f where
 
   (<*!) :: f a -> f b -> f a
   (<*!) = liftA2_ const
+
+--- Monad ------------------------------------------------------------
+
+class Applicative_ m => Monad_ m where
+  return_ :: a -> m a
+  return_ = pure_
+
+  (>>=!) :: m a -> (a -> m b) -> m b
+
+  (>>!) :: m a -> m b -> m b
+  (>>!) a b = a >>=! const b
