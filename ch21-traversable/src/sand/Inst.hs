@@ -1,3 +1,5 @@
+{-# LANGUAGE ExistentialQuantification #-}
+
 module Inst where
 
 --- Monoid -----------------------------------------------------------
@@ -58,3 +60,39 @@ infixr 1 =<<!
 infixr 1 >=>!
 (>=>!) :: Monad_ m => (a -> m b) -> (b -> m c) -> (a -> m c)
 (>=>!) f g a = f a >>=! g
+
+--- Foldable ---------------------------------------------------------
+
+class Foldable_ t where
+  {-# MINIMAL (fold_ | foldMap_)#-}
+  fold_ :: Monoid_ m => t m -> m
+
+  foldMap_ :: Monoid_ m => (a -> m) -> t a -> m
+
+  foldr_ :: (a -> b -> b) -> b -> t a -> b
+
+  foldr_' :: (a -> b -> b) -> b -> t a -> b
+
+  foldl_ :: (b -> a -> b) -> b -> t a -> b
+
+  foldl_' :: (b -> a -> b) -> b -> t a -> b
+
+  foldr1 :: (a -> a -> a) -> t a -> a
+
+  foldl1 :: (a -> a -> a) -> t a -> a
+
+  toList :: t a -> [a]
+
+  null :: t a -> Bool
+
+  length :: t a -> Int
+
+  elem :: Eq a => e -> t a -> Bool
+
+  maximum :: forall a. Ord a => t a -> a
+
+  minimum :: forall a. Ord a => t a -> a
+
+  sum :: Num a => t a -> a
+
+  product :: Num a => t a -> a
