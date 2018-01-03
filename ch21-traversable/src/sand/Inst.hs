@@ -50,3 +50,11 @@ class Applicative_ m => Monad_ m where
 
   (>>!) :: m a -> m b -> m b
   (>>!) a b = a >>=! const b
+
+infixr 1 =<<!
+(=<<!) :: Monad_ m => (a -> m b) -> m a -> m b
+(=<<!) f m = m >>=! f
+
+infixr 1 >=>!
+(>=>!) :: Monad_ m => (a -> m b) -> (b -> m c) -> (a -> m c)
+(>=>!) f g a = f a >>=! g
