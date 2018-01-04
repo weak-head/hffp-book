@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module ChEx where
 
 import Data.Monoid ((<>))
@@ -231,18 +232,28 @@ data S n a =
 instance Functor n => Functor (S n) where
   fmap f (S m a) = S (fmap f m) (f a)
 
-instance Foldable (S n) where
-  foldr f d (S _ a) = f a d
+instance Foldable n => Foldable (S n) where
+  foldMap f (S m a) = foldMap f m <> f a
 
 instance Traversable n => Traversable (S n) where
   traverse f (S m a) = undefined
 
-instance (Arbitrary a, Arbitrary (m a)) => Arbitrary (S m a) where
+instance ( Functor m
+         , Arbitrary a
+         , Arbitrary (m a) )
+        => Arbitrary (S m a) where
   arbitrary = liftA2 S arbitrary arbitrary
 
-instance (Eq a, Eq (m a), Applicative m, Testable (m Property), EqProp a) => EqProp (S m a) where
+instance ( Eq a
+         , Eq (m a)
+         , Applicative m
+         , Testable (m Property)
+         , EqProp a )
+        => EqProp (S m a) where
   (=-=) (S x y) (S p q) =
     (property $ liftA2 (=-=) x p) .&. (y =-= q)
+
+sSm = sample' (arbitrary :: Gen (S [] Int))
 
 sQB = do
   quickBatch (functor (undefined :: S [] (Int, Bool, [String])))
