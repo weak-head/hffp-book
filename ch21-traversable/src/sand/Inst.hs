@@ -1,8 +1,11 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ExistentialQuantification #-}
 
 module Inst where
+
+import Data.Coerce
 
 --- Monoid -----------------------------------------------------------
 
@@ -69,6 +72,16 @@ instance Monoid_ (a -> a) where
   mempty_ = id
   mappend_ = (.)
 
+newtype Sum_ a = Sum_ { unSum_ :: a } deriving (Show, Eq, Ord)
+instance Num a => Monoid_ (Sum_ a) where
+  mempty_ = Sum_ 0
+  mappend_ = coerce ((+) :: a -> a -> a)
+
+newtype Prod_ a = Prod_ { unProd_ :: a } deriving (Show, Eq, Ord)
+instance Num a => Monoid_ (Prod_ a) where
+  mempty_ = Prod_ 1
+  mappend_ = coerce ((*) :: a -> a -> a)
+
 class Foldable_ t where
   {-# MINIMAL (foldr_ | foldMap_) #-}
 
@@ -92,22 +105,28 @@ class Foldable_ t where
   foldl_' :: (b -> a -> b) -> b -> t a -> b
   foldl_' f = foldl_' (\a v -> a `seq` f a v)
 
-  foldr1 :: (a -> a -> a) -> t a -> a
+  foldr1_ :: (a -> a -> a) -> t a -> a
 
-  foldl1 :: (a -> a -> a) -> t a -> a
+  foldl1_ :: (a -> a -> a) -> t a -> a
 
-  toList :: t a -> [a]
+  toList_ :: t a -> [a]
+  toList_ = foldr_ (:) []
 
-  null :: t a -> Bool
+  null_ :: t a -> Bool
+  null_ = foldr_ (\_ _ -> False) True
 
-  length :: t a -> Int
+  length_ :: t a -> Int
+  length_ = foldr_ (\_ n -> n + 1) 0
 
-  elem :: Eq a => e -> t a -> Bool
+  elem_ :: Eq a => a -> t a -> Bool
+  elem_ e = foldr_ (\v a -> a || (e == v)) False
 
-  maximum :: forall a. Ord a => t a -> a
+  maximum_ :: forall a. Ord a => t a -> a
 
-  minimum :: forall a. Ord a => t a -> a
+  minimum_ :: forall a. Ord a => t a -> a
 
-  sum :: Num a => t a -> a
+  sum_ :: Num a => t a -> a
+  sum_ = unSum_ . foldMap_ Sum_
 
-  product :: Num a => t a -> a
+  product_ :: Num a => t a -> a
+  product_ = unProd_ . foldMap_ Prod_
