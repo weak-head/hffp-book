@@ -221,3 +221,29 @@ instance (Eq a, Eq b) => EqProp (Bigger a b) where
 biggerQB = do
   quickBatch (functor (undefined :: Bigger String (Int, Bool, [String])))
   quickBatch (traversable (undefined :: Bigger String (Int, Bool, [String])))
+
+--- S ----------------------------------------------------------------
+
+data S n a =
+  S (n a) a
+  deriving (Eq, Show)
+
+instance Functor n => Functor (S n) where
+  fmap f (S m a) = S (fmap f m) (f a)
+
+instance Foldable (S n) where
+  foldr f d (S _ a) = f a d
+
+instance Traversable n => Traversable (S n) where
+  traverse f (S m a) = undefined
+
+instance (Arbitrary a, Arbitrary (m a)) => Arbitrary (S m a) where
+  arbitrary = liftA2 S arbitrary arbitrary
+
+instance (Eq a, Eq (m a), Applicative m, Testable (m Property), EqProp a) => EqProp (S m a) where
+  (=-=) (S x y) (S p q) =
+    (property $ liftA2 (=-=) x p) .&. (y =-= q)
+
+sQB = do
+  quickBatch (functor (undefined :: S [] (Int, Bool, [String])))
+  quickBatch (traversable (undefined :: S [] (Int, Bool, [String])))
