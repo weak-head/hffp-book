@@ -139,3 +139,17 @@ class Foldable_ t where
 
   product_ :: Num a => t a -> a
   product_ = unProd_ . foldMap_ Prod_
+
+--- Traversable ------------------------------------------------------
+
+class (Functor_ t, Foldable_ t) => Traversable_ t where
+  {-# MINIMAL sequenceA_ | traverse_ #-}
+  sequenceA_ :: Applicative_ f => t (f a) -> f (t a)
+
+  traverse_ :: Applicative_ f => (a -> f b) -> t a -> f (t b)
+
+  sequence_ :: Monad_ m => t (m a) -> m (t a)
+  sequence_ = sequenceA_
+
+  mapM_ :: Monad_ m => (a -> m b) -> t a -> m (t b)
+  mapM_ = traverse_
