@@ -236,7 +236,7 @@ instance Foldable n => Foldable (S n) where
   foldMap f (S m a) = foldMap f m <> f a
 
 instance Traversable n => Traversable (S n) where
-  traverse f (S m a) = undefined
+  traverse f (S m a) = liftA2 S (traverse f m) (f a)
 
 instance ( Functor m
          , Arbitrary a
@@ -245,16 +245,12 @@ instance ( Functor m
   arbitrary = liftA2 S arbitrary arbitrary
 
 instance ( Eq a
-         , Eq (m a)
-         , Applicative m
-         , Testable (m Property)
-         , EqProp a )
+         , Eq (m a))
         => EqProp (S m a) where
-  (=-=) (S x y) (S p q) =
-    (property $ liftA2 (=-=) x p) .&. (y =-= q)
+  (=-=) = eq
 
 sSm = sample' (arbitrary :: Gen (S [] Int))
 
 sQB = do
-  quickBatch (functor (undefined :: S [] (Int, Bool, [String])))
-  quickBatch (traversable (undefined :: S [] (Int, Bool, [String])))
+  quickBatch (functor (undefined :: S Maybe (Int, Bool, [String])))
+  quickBatch (traversable (undefined :: S Maybe (Int, Bool, [String])))
