@@ -145,8 +145,10 @@ class Foldable_ t where
 class (Functor_ t, Foldable_ t) => Traversable_ t where
   {-# MINIMAL sequenceA_ | traverse_ #-}
   sequenceA_ :: Applicative_ f => t (f a) -> f (t a)
+  sequenceA_ = traverse_ id
 
   traverse_ :: Applicative_ f => (a -> f b) -> t a -> f (t b)
+  traverse_ = (sequenceA_ .) . fmap_
 
   sequence_ :: Monad_ m => t (m a) -> m (t a)
   sequence_ = sequenceA_
