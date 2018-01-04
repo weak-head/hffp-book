@@ -33,5 +33,4 @@ instance Foldable_ Maybe_ where
   foldr_ f d = maybe_ d (`f` d)
 
 instance Traversable_ Maybe_ where
-  sequenceA_ Nothing_  = pure_ Nothing_
-  sequenceA_ (Just_ a) = fmap_ Just_ a
+  sequenceA_ = maybe_ (pure_ Nothing_) (fmap_ Just_)
