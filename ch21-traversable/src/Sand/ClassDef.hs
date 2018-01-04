@@ -3,7 +3,7 @@
 --{-# LANGUAGE FlexibleContexts #-}
 --{-# LANGUAGE ExistentialQuantification #-}
 
-module Inst where
+module Sand.ClassDef where
 
 import Data.Maybe
 import Data.Coerce
