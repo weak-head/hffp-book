@@ -1,10 +1,11 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE ExistentialQuantification #-}
+--{-# LANGUAGE FlexibleContexts #-}
+--{-# LANGUAGE ExistentialQuantification #-}
 
 module Inst where
 
+import Data.Maybe
 import Data.Coerce
 
 --- Monoid -----------------------------------------------------------
@@ -106,8 +107,14 @@ class Foldable_ t where
   foldl_' f = foldl_' (\a v -> a `seq` f a v)
 
   foldr1_ :: (a -> a -> a) -> t a -> a
+  foldr1_ f = fromMaybe (error "Empty sequence") . foldr_ go Nothing
+    where go a Nothing  = Just a
+          go a (Just b) = Just (f a b)
 
   foldl1_ :: (a -> a -> a) -> t a -> a
+  foldl1_ f = fromMaybe (error "Empty sequence") . foldl_ go Nothing
+    where go Nothing  a = Just a
+          go (Just b) a = Just (f b a)
 
   toList_ :: t a -> [a]
   toList_ = foldr_ (:) []
@@ -121,9 +128,11 @@ class Foldable_ t where
   elem_ :: Eq a => a -> t a -> Bool
   elem_ e = foldr_ (\v a -> a || (e == v)) False
 
-  maximum_ :: forall a. Ord a => t a -> a
+  maximum_ :: Ord a => t a -> a
+  maximum_ = foldr1_ max
 
-  minimum_ :: forall a. Ord a => t a -> a
+  minimum_ :: Ord a => t a -> a
+  minimum_ = foldr1_ min
 
   sum_ :: Num a => t a -> a
   sum_ = unSum_ . foldMap_ Sum_
