@@ -1,14 +1,12 @@
---{-# LANGUAGE FlexibleInstances #-}
-
 module Sand.Func where
 
 import Sand.ClassDef
 
 newtype Func a b =
-  Func { unFunc :: (a -> b) }
+  Func { unFunc :: a -> b }
 
 newtype FuncM a =
-  FuncM { unFuncM :: (a -> a) }
+  FuncM { unFuncM :: a -> a }
 
 ---
 
@@ -20,8 +18,8 @@ instance Monoid_ b => Monoid_ (Func a b) where
                  in v1 `mappend_` v2
 
 instance Monoid_ a => Monoid_ (FuncM a) where
-  mempty_ = FuncM $ id
-  mappend_ (FuncM f) (FuncM g) = FuncM $ (f . g)
+  mempty_ = FuncM id
+  mappend_ (FuncM f) (FuncM g) = FuncM $ f . g
 
 ---
 
