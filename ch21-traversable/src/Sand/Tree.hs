@@ -24,3 +24,9 @@ instance Foldable_ Tree where
     let d'  = foldr_ f d  l
         d'' = foldr_ f d' r
     in f v d''
+
+instance Traversable_ Tree where
+  traverse_ _ Empty    = pure_ Empty
+  traverse_ f (Leaf a) = fmap_ Leaf (f a)
+  traverse_ f (Node l v r)
+    = fmap_ Node (traverse_ f l) <*>! (f v) <*>! (traverse_ f r)
