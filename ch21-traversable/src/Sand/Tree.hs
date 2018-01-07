@@ -8,10 +8,22 @@ data Tree a =
   | Node (Tree a) a (Tree a)
   deriving (Show, Eq)
 
+infixr 5 *+*
+
+(*+*) :: Tree a -> Tree a -> Tree a
+(*+*) = undefined
+
+concat_ :: Tree (Tree a) -> Tree a
+concat_ = foldr_ (*+*) Empty
+
 instance Functor_ Tree where
   fmap_ _ Empty        = Empty
   fmap_ f (Leaf a)     = Leaf (f a)
   fmap_ f (Node l v r) = Node (fmap_ f l) (f v) (fmap_ f r)
+
+instance Applicative_ Tree where
+  pure_ = Leaf
+  fs <*>! xs = concat_ $ fmap_ ($xs) (fmap_ fmap_ fs)
 
 instance Foldable_ Tree where
   foldMap_ _ Empty        = mempty_
