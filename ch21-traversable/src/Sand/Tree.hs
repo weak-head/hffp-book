@@ -22,8 +22,12 @@ instance Functor_ Tree where
   fmap_ f (Node l v r) = Node (fmap_ f l) (f v) (fmap_ f r)
 
 instance Applicative_ Tree where
-  pure_ = Leaf
+  pure_      = Leaf
   fs <*>! xs = concat_ $ fmap_ ($xs) (fmap_ fmap_ fs)
+
+instance Monad_ Tree where
+  return_  = pure_
+  t >>=! f = concat_ $ fmap_ f t
 
 instance Foldable_ Tree where
   foldMap_ _ Empty        = mempty_
