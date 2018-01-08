@@ -1,6 +1,7 @@
 module NewBegining where
 
 import Control.Applicative
+import Data.Char
 
 boop :: Num a => a -> a
 boop = (*2)
@@ -28,3 +29,32 @@ boopDoop = do
   a <- boop
   b <- doop
   return (a + b)
+
+--------------------------------------------------
+
+cap :: [Char] -> [Char]
+cap = map toUpper
+
+rev :: [Char] -> [Char]
+rev = reverse
+
+composed :: [Char] -> [Char]
+composed = cap . rev
+
+fmapped :: [Char] -> [Char]
+fmapped = cap <$> rev
+
+tupled :: [Char] -> ([Char], [Char])
+tupled = liftA2 (,) cap rev
+
+tupled' :: [Char] -> ([Char], [Char])
+tupled' = do
+  a <- cap
+  b <- rev
+  return (a, b)
+
+tupled'' :: [Char] -> ([Char], [Char])
+tupled'' =
+  cap >>=
+  \a -> rev >>=
+        \b -> return (a, b)
