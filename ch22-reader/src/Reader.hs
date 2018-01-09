@@ -110,3 +110,27 @@ frooty' = \r -> bar (foo r) r
 fooBind :: (r -> a) -> (a -> r -> b) -> (r -> b)
 fooBind m k = \r -> k (m r) r
 -- (>>=)
+
+
+instance Monad (Reader r) where
+  return = pure
+  (Reader f) >>= g =
+    Reader $ \a -> runReader (g (f a)) $ a
+
+getDogRM :: Person -> Dog
+getDogRM = do
+  name <- dogName
+  addy <- address
+  return $ Dog name addy
+
+getDogRM' :: Person -> Dog
+getDogRM' =
+  dogName >>=
+    \n -> address >>=
+          \a -> return $ Dog n a
+
+getDogRMm :: Reader Person Dog
+getDogRMm = do
+  name <- Reader dogName
+  addy <- Reader address
+  return $ Dog name addy
