@@ -1,7 +1,9 @@
 module FizzBuzzState where
 
-import Control.Monad
-import Control.Monad.Trans.State
+import           Control.Monad
+import           Control.Monad.Trans.State
+import qualified Data.DList as DL
+
 
 fizzBuzz n | n `mod` 15 == 0 = "FizzBuzz"
            | n `mod` 5  == 0 = "Buzz"
@@ -23,3 +25,17 @@ addResult n = do
 
 main :: IO ()
 main = mapM_ putStrLn $ reverse $ fizzbuzzList [1..100]
+
+--- Using DList ------------------------------------------------------
+
+fizzbuzzList2 :: [Integer] -> DL.DList String
+fizzbuzzList2 list = execState (mapM_ addResult2 list) DL.empty
+
+addResult2 :: Integer -> State (DL.DList String) ()
+addResult2 n = do
+  xs <- get
+  let result = fizzBuzz n
+  put (DL.snoc xs result)
+
+main2 :: IO ()
+main2 = mapM_ putStrLn $ fizzbuzzList2 [1..100]
