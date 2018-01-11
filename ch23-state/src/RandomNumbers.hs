@@ -5,7 +5,7 @@ import System.Random
 -- mkStdGen :: Int -> StdGen
 -- next :: StdGen g => g -> (Int, g)
 -- random  :: (RandomGen g, Random a) => g -> (a, g)
--- randomR :: (RandomGen g, Random a) => (a, a) -> g (a, g)
+-- randomR :: (RandomGen g, Random a) => (a, a) -> g -> (a, g)
 
 mkSG = mkStdGen 0
 nSG  = next mkSG
