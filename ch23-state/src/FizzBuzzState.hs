@@ -39,3 +39,11 @@ addResult2 n = do
 
 main2 :: IO ()
 main2 = mapM_ putStrLn $ fizzbuzzList2 [1..100]
+
+--- The other way ----------------------------------------------------
+
+fizzbuzzFromTo :: Integer -> Integer -> [String]
+fizzbuzzFromTo b a = fizzbuzzList [a, a + (signum $ b - a)..b]
+
+main3 :: IO ()
+main3 = mapM_ putStrLn $ fizzbuzzFromTo 1 100
