@@ -54,7 +54,7 @@ instance (Arbitrary s, Eq s, Eq a, EqProp s, EqProp a, Show a, Show s) => EqProp
 batchMoi = do
   quickBatch (functor (undefined :: Moi Int (String, Int, Bool)))
   quickBatch (applicative (undefined :: Moi Int (String, Int, Bool)))
-  quickBatch (monad (undefined :: Moi Int (String, Int, Bool)))  -- woooop! monad is broken :D
+  quickBatch (monad (undefined :: Moi Int (String, Int, Bool)))
 
 
 {-- Visualizing State instances --------------------------------------
