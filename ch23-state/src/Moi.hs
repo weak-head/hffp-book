@@ -31,8 +31,7 @@ instance Monad (Moi s) where
   return = pure
   (Moi g) >>= f =
     Moi $ \s -> let (a, s') = g s
-                    (Moi k) = f a
-                in k s
+                in runMoi (f a) s'
 
 ---
 
