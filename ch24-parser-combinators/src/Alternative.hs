@@ -1,7 +1,8 @@
 module Alternative where
 
-import Control.Applicative
-import Text.Trifecta
+import           Control.Applicative
+import qualified QuasiQuotes as Q
+import           Text.Trifecta
 
 -- > parseString (some letter) mempty "bb"
 -- Success "bb"
@@ -20,6 +21,31 @@ parseNos :: Parser NumberOrString
 parseNos =
   (Left <$> integer) <|> (Right <$> some letter)
 
+-- > :t some letter
+-- some letter: CharParsing f => f [Char]
+--
+-- > data MyName = MyName String deriving Show
+-- > :t MyName <$> (some letter)
+-- MyName <$> (some letter) :: Parser MyName
+--
+-- > parseString (some letter) mempty "Cc"
+-- Success "Cc"
+--
+-- > parseString (MyName <$> (some letter)) mempty "Cc"
+-- Success (MyName "Cc")
+
+parseNos' :: Parser NumberOrString
+parseNos' =
+  skipMany (oneOf "\n") >>
+  (Left <$> integer) <|> (Right <$> some letter)
+
+parseNos'' :: Parser NumberOrString
+parseNos'' = do
+  skipMany (oneOf "\n")
+  v <- (Left <$> integer) <|> (Right <$> some letter)
+  skipMany (oneOf "\n")
+  return v
+
 main = do
   let p f i =
         parseString f mempty i
@@ -29,6 +55,13 @@ main = do
   print $ p parseNos b
   print $ p (many parseNos) c  -- 0+
   print $ p (some parseNos) c  -- 1+
+
+  print $ p parseNos Q.eitherOr
+  print $ p parseNos' Q.eitherOr
+  print $ parseString (some parseNos') mempty Q.eitherOr
+  print $ parseString (some parseNos'') mempty Q.eitherOr
+  print $ parseString (some (token parseNos')) mempty Q.eitherOr
+
 
 -- > parseString (some integer) memtpy "123"
 -- Success [123]
