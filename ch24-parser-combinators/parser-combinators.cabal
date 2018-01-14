@@ -16,3 +16,4 @@ library
                      , random
                      , dlist
                      , trifecta
+                     , parsers
