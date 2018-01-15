@@ -3,16 +3,16 @@
 
 module ParsingIni where
 
-import Control.Applicative
-import Data.ByteString (ByteString)
-import Data.Char (isAlpha)
-import Data.Map (Map)
+import           Control.Applicative
+import           Data.ByteString (ByteString)
+import           Data.Char (isAlpha)
+import           Data.Map (Map)
 import qualified Data.Map as M
-import Data.Text (Text)
+import           Data.Text (Text)
 import qualified Data.Text.IO as TIO
-import Test.Hspec
-import Text.RawString.QQ
-import Text.Trifecta
+import           Test.Hspec
+import           Text.RawString.QQ
+import           Text.Trifecta
 
 headerEx :: ByteString
 headerEx = "[blah]"
@@ -40,9 +40,13 @@ type Assignments = Map Name Value
 
 parseAssignment :: Parser (Name, Value)
 parseAssignment = do
+  skipWhitespace
+  skipComments
   name <- some letter
   _ <- char '='
-  value <- some (noneOf "\n")
+  value <- some (noneOf "\n ;#")
+  skipWhitespace
+  skipComments
   skipEOL
   return (name, value)
 
@@ -83,7 +87,8 @@ sectionEx'' :: ByteString
 sectionEx'' = [r|
 ; comment
 [section]
-host=wikipedia.org
+; comment #2
+host=wikipedia.org ; do
 alias=claw
 
 [whatisit]
