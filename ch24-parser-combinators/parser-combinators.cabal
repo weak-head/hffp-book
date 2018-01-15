@@ -18,3 +18,5 @@ library
                      , trifecta
                      , parsers
                      , raw-strings-qq
+                     , containers
+                     , text
