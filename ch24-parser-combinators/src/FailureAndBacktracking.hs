@@ -31,6 +31,9 @@ tryParse :: (Monad f, CharParsing f) => f Char
 tryParse = try (char '1' >> char '2')
            <|> char '3'
 
+tryAnnot :: (Monad f, CharParsing f) => f Char
+tryAnnot = (try (char '1' >> char '2') <?> "Tried 12")
+           <|> (char '3' <?> "Tried 3")
 ----------
 
 main :: IO ()
@@ -38,11 +41,16 @@ main = do
   -- trifecta
   trifP nobackParse "13"
   trifP tryParse "13"
+  trifP tryAnnot "13"
+  print "----------------"
 
   -- parsec
   parsecP nobackParse "13"
   parsecP tryParse "13"
+  parsecP tryAnnot "13"
+  print "----------------"
 
   -- attoparsec
   attoP nobackParse "13"
   attoP tryParse "13"
+  attoP tryAnnot "13"
