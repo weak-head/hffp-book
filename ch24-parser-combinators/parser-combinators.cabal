@@ -21,3 +21,4 @@ library
                      , containers
                      , text
                      , attoparsec
+                     , parsec
