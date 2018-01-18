@@ -22,3 +22,5 @@ library
                      , text
                      , attoparsec
                      , parsec
+                     , aeson
+                     , scientific
