@@ -12,10 +12,10 @@ data NumberOrString =
   | NOSI Integer
   deriving (Show, Eq)
 
-type Major = Integer
-type Minor = Integer
-type Patch = Integer
-type Release = [NumberOrString]
+type Major    = Integer
+type Minor    = Integer
+type Patch    = Integer
+type Release  = [NumberOrString]
 type Metadata = [NumberOrString]
 
 -- | Defines the semantic version.
@@ -37,6 +37,16 @@ data SemVer =
          , release  :: Release
          , metadata :: Metadata
          } deriving (Show, Eq)
+
+instance Ord SemVer where
+  (<=)
+    (SemVer mj  mn  pt  rl  _)
+    (SemVer mj' mn' pt' rl' _) =
+      (mj <= mj') &&
+      (mn <= mn') &&
+      (pt <= pt') &&
+      (show rl <= show rl')
+
 
 parseNos :: Parser NumberOrString
 parseNos =
@@ -75,5 +85,10 @@ main = do
   print $ parse "1.4.7+exp.sha.5114f85"
   print $ parse "0.9.7-beta+exp.sha.5114f85"
   print $ parse "3.1.7-x.17.92+e2"
-
-  -- SemVer 2 1 1 [] [] > SemVer 2 1 0 [] []
+  -----
+  print $ SemVer 2 1 1 [] [] > SemVer 2 1 0 [] []
+  print $ SemVer 1 2 1 [] [] > SemVer 1 2 3 [] []
+  print $ SemVer 1 2 1 [] [] > SemVer 1 2 0 [] []
+  print $ SemVer 1 2 0 [] [] == SemVer 1 2 0 [] []
+  print $ SemVer 1 2 0 [NOSI 4, NOSS "abc"] [] <  SemVer 1 2 0 [NOSI 5, NOSS "ffs"] []
+  print $ SemVer 1 2 0 [NOSI 4, NOSS "abc"] [] == SemVer 1 2 0 [NOSI 4, NOSS "abc"] []
