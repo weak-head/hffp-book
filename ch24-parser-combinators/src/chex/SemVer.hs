@@ -41,35 +41,34 @@ data SemVer =
 parseNos :: Parser NumberOrString
 parseNos =
   skipMany (oneOf ".") >>
-  (NOSI <$> integer) <|> (NOSS <$> some letter)
+  try (NOSI <$> integer) <|> try (NOSS <$> some letter)
 
 parseRelease :: Parser Release
-parseRelease = do
-  _ <- char '-'
-  some parseNos
+parseRelease = char '-' >> some parseNos
 
 parseMetadata :: Parser Metadata
-parseMetadata = do
-  _ <- char '+'
-  some parseNos
+parseMetadata = char '+' >> some parseNos
 
 parseSemVer :: Parser SemVer
 parseSemVer = do
   mj <- integer
-  _ <- char '.'
+  char '.'
   mn <- integer
-  _ <- char '.'
+  char '.'
   pt <- integer
-  try (liftA2 (SemVer mj mn pt) (try parseRelease) (try parseMetadata))
-    <|> try (liftA2 (SemVer mj mn pt) (try parseRelease) (pure []))
-    <|> try (SemVer mj mn pt [] <$> (try parseMetadata))
-    <|> (return $ SemVer mj mn pt [] [])
-
+  liftA2 (SemVer mj mn pt)
+         (try parseRelease <|> pure [])
+         (try parseMetadata <|> pure [])
 
 
 main :: IO ()
 main = do
   let parse = parseString parseSemVer mempty
+  ------
+  print $ parse "f3.32.1"
+  print $ parse "2.f.1"
+  print $ parse "1.0"
+  ------
   print $ parse "2.1.1"
   print $ parse "1.2.3-x.7.z.92"
   print $ parse "1.7.4+20130313144700"
