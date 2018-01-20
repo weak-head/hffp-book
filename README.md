@@ -4,7 +4,8 @@ This repository contains source code, exercises, related topics and some additio
 
 ## Places worth to check
 
-There is a lot of random unstructured stuff here, so probably these are the places that could be the most interesting for you:
+There is a lot of random unstructured stuff here.  
+Probably, the most interesting for you would be the following:
 
 > The base library definitions and implementations
 
