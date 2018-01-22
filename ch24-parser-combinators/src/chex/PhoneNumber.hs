@@ -12,10 +12,16 @@ data PhoneNumber =
   deriving (Eq, Show)
 
 parseNumberingPlanArea :: Parser NumberingPlanArea
-parseNumberingPlanArea = read <$> count 3 digit
+parseNumberingPlanArea =
+  try (between (symbol "(") (symbol ")") pn) <|> pn
+  where pn = read <$> count 3 digit
 
 parseExchange :: Parser Exchange
-parseExchange = read <$> count 3 digit
+parseExchange = do
+  skipOptional (oneOf "- ")
+  v <- read <$> count 3 digit
+  skipOptional (oneOf "- ")
+  return v
 
 parseLineNumber :: Parser LineNumber
 parseLineNumber = read <$> count 4 digit
