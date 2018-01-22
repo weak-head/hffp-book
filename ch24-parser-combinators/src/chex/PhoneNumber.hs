@@ -11,6 +11,11 @@ data PhoneNumber =
   PhoneNumber NumberingPlanArea Exchange LineNumber
   deriving (Eq, Show)
 
+skipCountryCode :: Parser ()
+skipCountryCode =
+  skipOptional (try (char '+' >> digit >> char '-') <|>
+                    (digit >> char '-'))
+
 parseNumberingPlanArea :: Parser NumberingPlanArea
 parseNumberingPlanArea =
   try (between (symbol "(") (symbol ")") pn) <|> pn
@@ -28,7 +33,8 @@ parseLineNumber = read <$> count 4 digit
 
 parsePhone :: Parser PhoneNumber
 parsePhone =
-  liftA3 PhoneNumber parseNumberingPlanArea parseExchange parseLineNumber
+  try (skipCountryCode >> pn) <|> pn
+  where pn = liftA3 PhoneNumber parseNumberingPlanArea parseExchange parseLineNumber
 
 main :: IO ()
 main = do
@@ -37,5 +43,8 @@ main = do
   print $ p "123-456-7890"
   print $ p "1234567890"
   print $ p "(123) 456-7890"
+  print $ p "(123)456-7890"
+  print $ p "(123)4567890"
   print $ p "1-123-456-7890"
+  print $ p "+1-123-456-7890"
     -- for all of them: PhoneNumber 123 456 7890
