@@ -3,13 +3,15 @@
 
 module LogFile where
 
+import Data.Map
+import Data.Time
 import Control.Applicative
 import Data.ByteString.Lazy (ByteString)
 import Text.RawString.QQ
 import Text.Trifecta
 
-log :: ByteString
-log = [r|
+theLogExample :: ByteString
+theLogExample = [r|
 -- a comment
 
 # 2025-02-05
@@ -38,3 +40,21 @@ log = [r|
 22:00 Sleep
 
 |]
+
+
+-- > fromGregorianValid 2008 10 22
+-- Just 2008-10-22
+-- > show $ fromJust $ fromGregorianValid 2008 10 22
+-- "2008-10-22" :: String
+-- https://two-wrongs.com/haskell-time-library-tutorial
+
+type Time         = UTCTime
+type Activity     = String
+
+newtype Log =
+  Log { log :: Map Day DailyActivityLog }
+  deriving (Eq, Show)
+
+newtype DailyActivityLog =
+  DailyActivityLog { dayLog :: Map Time Activity }
+  deriving (Eq, Show)
