@@ -83,7 +83,16 @@ parseTime = do
   mm <- fromIntegral <$> natural
   case DT.makeTimeOfDayValid hh mm 0 of
      Nothing -> empty
-     Just v  -> return v    
+     Just v  -> return v
+
+parseActivity :: Parser Activity
+parseActivity = do
+  skipMany space
+  some (noneOf "\n")
+
+parseActivityRecord :: Parser (Time, Activity)
+parseActivityRecord =
+  liftA2 (,) parseTime parseActivity
 
 main = do
   let pt = parseByteString parseTime mempty
@@ -94,3 +103,9 @@ main = do
   print $ pt "00:00"
   print $ pt "12:77"
   print $ pt "12:59"
+  ---
+  let pr = parseByteString parseActivityRecord mempty
+  print $ pr "08:00 Breakfast -- should I try skippin bfast?"
+  print $ pr "09:33 Activity\nAnd something else"
+  print $ pr "99:99 Something"
+  print $ pr "Other 99:99"
