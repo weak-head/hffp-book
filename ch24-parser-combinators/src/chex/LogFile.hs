@@ -3,13 +3,14 @@
 
 module LogFile where
 
+import           Control.Applicative
+import           Data.ByteString.Lazy (ByteString)
 import qualified Data.Map as DM
+import           Data.Text hiding (empty)
 import qualified Data.Time as DT
-import Control.Applicative
-import Data.ByteString.Lazy (ByteString)
-import Text.RawString.QQ
-import Text.Trifecta
-import Text.Parser.LookAhead
+import           Text.Parser.LookAhead
+import           Text.RawString.QQ
+import           Text.Trifecta
 
 theLogExample :: ByteString
 theLogExample = [r|
@@ -52,15 +53,17 @@ theLogExample = [r|
 -- > parseTimeM True defaultTimeLocale "%R" "12:00" :: Maybe TimeOfDay
 
 type Time         = DT.TimeOfDay
-type Activity     = String
+type Activity     = Text
 
 newtype Log =
-  Log { log :: DM.Map DT.Day DailyActivityLog }
+  Log { log :: DM.Map DT.Day [ActivityRecord] }
   deriving (Eq, Show)
 
-newtype DailyActivityLog =
-  DailyActivityLog { dayLog :: DM.Map Time Activity }
-  deriving (Eq, Show)
+data ActivityRecord =
+  ActivityRecord { startTime :: Time
+                 , endTime   :: Time
+                 , activity  :: Activity
+                 } deriving (Eq, Show)
 
 skipComments :: Parser ()
 skipComments =
@@ -76,6 +79,7 @@ skipEol :: Parser ()
 skipEol =
   skipMany (oneOf "\n")
 
+-- | Parses and validates the activity start/end time.
 parseTime :: Parser Time
 parseTime = do
   hh <- fromIntegral <$> natural
@@ -85,12 +89,18 @@ parseTime = do
      Nothing -> empty
      Just v  -> return v
 
+-- | Extracts the time when the activity has finished
+-- (using the positive lookahead). In case if the time could
+-- not be extracted the default value of 23:59:00 is being used.
+lookAheadEndTime :: Parser Time
+lookAheadEndTime = return $ DT.TimeOfDay 23 59 00
+
 parseActivity :: Parser Activity
 parseActivity = do
   skipMany space
   a <- manyTill anyChar commentOrNewLine
   skipComments
-  return a
+  return $ strip $ pack a
   where
     commentOrNewLine = (try $ lookAhead $ string "--") <|>
                        (newline >> return "")
