@@ -9,6 +9,7 @@ import Control.Applicative
 import Data.ByteString.Lazy (ByteString)
 import Text.RawString.QQ
 import Text.Trifecta
+import Text.Parser.LookAhead
 
 theLogExample :: ByteString
 theLogExample = [r|
@@ -63,8 +64,7 @@ newtype DailyActivityLog =
 
 skipComments :: Parser ()
 skipComments =
-  skipMany (char '-' >>
-            char '-' >>
+  skipMany (string "--" >>
             skipMany (noneOf "\n") >>
             skipMany (oneOf "\n"))
 
@@ -88,7 +88,13 @@ parseTime = do
 parseActivity :: Parser Activity
 parseActivity = do
   skipMany space
-  some (noneOf "\n")
+  a <- manyTill anyChar commentOrNewLine
+  skipComments
+  return a
+  where
+    commentOrNewLine = (try $ lookAhead $ string "--") <|>
+                       (newline >> return "")
+  -- TODO: look ahead for time
 
 parseActivityRecord :: Parser (Time, Activity)
 parseActivityRecord =
