@@ -11,6 +11,7 @@ import qualified Data.Time as DT
 import           Text.Parser.LookAhead
 import           Text.RawString.QQ
 import           Text.Trifecta
+--import Debug.Trace (traceShowM)
 
 theLogExample :: ByteString
 theLogExample = [r|
@@ -61,8 +62,8 @@ newtype Log =
 
 data ActivityRecord =
   ActivityRecord { startTime :: Time
-                 , endTime   :: Time
                  , activity  :: Activity
+                 , endTime   :: Time
                  } deriving (Eq, Show)
 
 skipComments :: Parser ()
@@ -93,22 +94,22 @@ parseTime = do
 -- (using the positive lookahead). In case if the time could
 -- not be extracted the default value of 23:59:00 is being used.
 lookAheadEndTime :: Parser Time
-lookAheadEndTime = return $ DT.TimeOfDay 23 59 00
+lookAheadEndTime =
+  (lookAhead parseTime) <|> (return $ DT.TimeOfDay 23 59 00)
 
+-- | Parses activity text, trims the whitespaces and skips comments.
 parseActivity :: Parser Activity
 parseActivity = do
-  skipMany space
   a <- manyTill anyChar commentOrNewLine
   skipComments
   return $ strip $ pack a
   where
     commentOrNewLine = (try $ lookAhead $ string "--") <|>
                        (newline >> return "")
-  -- TODO: look ahead for time
 
-parseActivityRecord :: Parser (Time, Activity)
+parseActivityRecord :: Parser ActivityRecord
 parseActivityRecord =
-  liftA2 (,) parseTime parseActivity
+  liftA3 ActivityRecord parseTime parseActivity lookAheadEndTime
 
 main = do
   let pt = parseByteString parseTime mempty
@@ -120,8 +121,8 @@ main = do
   print $ pt "12:77"
   print $ pt "12:59"
   ---
-  let pr = parseByteString parseActivityRecord mempty
-  print $ pr "08:00 Breakfast -- should I try skippin bfast?"
+  let pr = parseByteString (many parseActivityRecord) mempty
+  print $ pr "08:00 Breakfast -- should I try skippin bfast?\n09:33 Activity -- And something else"
   print $ pr "09:33 Activity\nAnd something else"
   print $ pr "99:99 Something"
   print $ pr "Other 99:99"
