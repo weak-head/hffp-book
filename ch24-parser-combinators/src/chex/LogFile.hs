@@ -22,6 +22,7 @@ theLogExample = [r|
 09:00 Sanitizing moisture collector
 11:00 Exercising in high-grav gym
 12:00 Lunch
+-- -_-
 13:00 Programming
 17:00 Commuting home in rover
 17:30 R&R
@@ -73,12 +74,10 @@ skipComments =
             skipMany (oneOf "\n"))
 
 skipSpaces :: Parser ()
-skipSpaces =
-  skipMany (char ' ' <|> char '\n' <|> char '\t')
+skipSpaces = skipMany (char ' ' <|> char '\n' <|> char '\t')
 
 skipEol :: Parser ()
-skipEol =
-  skipMany (oneOf "\n")
+skipEol = skipMany newline
 
 -- | Parses and validates the activity start/end time.
 parseTime :: Parser Time
@@ -89,6 +88,18 @@ parseTime = do
   case DT.makeTimeOfDayValid hh mm 0 of
      Nothing -> empty
      Just v  -> return v
+
+-- | Parses and validates the day.
+parseDay :: Parser DT.Day
+parseDay = do
+  year <- fromIntegral <$> natural
+  char '-'
+  month <- fromIntegral <$> natural
+  char '-'
+  day <- fromIntegral <$> natural
+  case DT.fromGregorianValid year month day of
+    Nothing -> empty
+    Just v  -> return v
 
 -- | Extracts the time when the activity has finished
 -- (using the positive lookahead). In case if the time could
@@ -105,11 +116,22 @@ parseActivity = do
   return $ strip $ pack a
   where
     commentOrNewLine = (try $ lookAhead $ string "--") <|>
-                       (newline >> return "")
+                       (try $ newline >> return "") <|>
+                       (eof >> return "")
 
+-- | Parses activity record, skipping comments before and afterwards.
 parseActivityRecord :: Parser ActivityRecord
-parseActivityRecord =
-  liftA3 ActivityRecord parseTime parseActivity lookAheadEndTime
+parseActivityRecord = do
+  skipComments
+  a <- liftA3 ActivityRecord parseTime parseActivity lookAheadEndTime
+  skipComments
+  return a
+
+-- | Parses one day of the activity log.
+parseDayLog :: Parser (DT.Day, [ActivityRecord])
+parseDayLog =
+  skipComments >> skipSpaces >> char '#' >> skipMany space >>
+  liftA2 (,) parseDay (many parseActivityRecord)
 
 main = do
   let pt = parseByteString parseTime mempty
@@ -122,7 +144,10 @@ main = do
   print $ pt "12:59"
   ---
   let pr = parseByteString (many parseActivityRecord) mempty
-  print $ pr "08:00 Breakfast -- should I try skippin bfast?\n09:33 Activity -- And something else"
+  print $ pr "08:00 Breakfast -- should I try skippin bfast?\n09:33 Activity"
   print $ pr "09:33 Activity\nAnd something else"
   print $ pr "99:99 Something"
   print $ pr "Other 99:99"
+  ---
+  let pd = parseByteString parseDayLog mempty
+  print $ pd "--some comments\n# 2027-09-19\n08:00 Breakfast --comments\n09:00 Sanitizing moisture collector"
