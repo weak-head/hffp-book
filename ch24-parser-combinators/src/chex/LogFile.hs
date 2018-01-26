@@ -4,7 +4,8 @@
 module LogFile where
 
 import           Control.Applicative
-import           Data.ByteString.Lazy (ByteString)
+import           Control.Monad
+import           Data.ByteString (ByteString)
 import qualified Data.Map as DM
 import           Data.Text hiding (empty)
 import qualified Data.Time as DT
@@ -69,12 +70,10 @@ data ActivityRecord =
 
 skipComments :: Parser ()
 skipComments =
-  skipMany (string "--" >>
-            skipMany (noneOf "\n") >>
-            skipMany (oneOf "\n"))
+  skipMany (string "--" >> manyTill anyChar (void newline <|> eof))
 
-skipSpaces :: Parser ()
-skipSpaces = skipMany (char ' ' <|> char '\n' <|> char '\t')
+skipEmpty :: Parser ()
+skipEmpty = skipMany (space <|> newline <|> tab)
 
 skipEol :: Parser ()
 skipEol = skipMany newline
@@ -130,8 +129,13 @@ parseActivityRecord = do
 -- | Parses one day of the activity log.
 parseDayLog :: Parser (DT.Day, [ActivityRecord])
 parseDayLog =
-  skipComments >> skipSpaces >> char '#' >> skipMany space >>
+  skipEmpty >> skipComments >> skipEmpty >>
+  char '#' >> skipMany space >>
   liftA2 (,) parseDay (many parseActivityRecord)
+
+-- | Parses an activity log.
+parseLog :: Parser Log
+parseLog = (Log . DM.fromList) <$> many parseDayLog
 
 main = do
   let pt = parseByteString parseTime mempty
@@ -151,3 +155,7 @@ main = do
   ---
   let pd = parseByteString parseDayLog mempty
   print $ pd "--some comments\n# 2027-09-19\n08:00 Breakfast --comments\n09:00 Sanitizing moisture collector"
+  ---
+  let pl = parseByteString parseLog mempty
+  print $ pl "--some comments\n# 2027-09-19 -- dates not nececessarily sequential\n08:00 Breakfast --comments\n09:00 Sanitizing moisture collector\n\n# 2027-09-20\n08:00 Breakfast --comments\n09:00 Sanitizing moisture collector"
+  print $ pl theLogExample
