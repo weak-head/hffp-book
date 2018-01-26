@@ -18,19 +18,29 @@ theLogExample :: ByteString
 theLogExample = [r|
 -- a comment
 
+-- another comment
+
+-- and this one
+
 # 2025-02-05
+
+-- Comments
+
 08:00 Breakfast
 09:00 Sanitizing moisture collector
 11:00 Exercising in high-grav gym
 12:00 Lunch
--- -_-
-13:00 Programming
+-- The comment
+-- And another one
+13:00 Programming -- and here
 17:00 Commuting home in rover
 17:30 R&R
 19:00 Dinner
 21:00 Shower
 21:15 Read
 22:00 Sleep
+
+-- Improve this
 
 # 2025-02-07 -- dates not nececessarily sequential
 08:00 Breakfast -- should I try skippin bfast?
@@ -43,6 +53,10 @@ theLogExample = [r|
 21:00 Dinner
 21:15 Read
 22:00 Sleep
+
+-- some comments here
+
+-- and here
 
 |]
 
@@ -68,15 +82,23 @@ data ActivityRecord =
                  , endTime   :: Time
                  } deriving (Eq, Show)
 
+comment :: Parser String
+comment =
+  string "--" >>
+  manyTill anyChar (void newline <|> eof)
+
+blank :: Parser Char
+blank = space <|> newline <|> tab
+
 skipComments :: Parser ()
-skipComments =
-  skipMany (string "--" >> manyTill anyChar (void newline <|> eof))
+skipComments = skipMany comment
 
 skipEmpty :: Parser ()
-skipEmpty = skipMany (space <|> newline <|> tab)
+skipEmpty = skipMany blank
 
-skipEol :: Parser ()
-skipEol = skipMany newline
+skipCommentsAndEmpty :: Parser ()
+skipCommentsAndEmpty =
+  skipMany (comment <|> (blank >> return ""))
 
 -- | Parses and validates the activity start/end time.
 parseTime :: Parser Time
@@ -123,16 +145,18 @@ parseActivity = do
 -- | Parses activity record, skipping comments before and afterwards.
 parseActivityRecord :: Parser ActivityRecord
 parseActivityRecord = do
-  skipComments
+  skipCommentsAndEmpty
   a <- liftA3 ActivityRecord parseTime parseActivity lookAheadEndTime
-  skipComments
+  skipCommentsAndEmpty
   return a
 
 -- | Parses one day of the activity log.
 parseDayLog :: Parser (DT.Day, [ActivityRecord])
-parseDayLog =
-  skipEmpty >> skipComments >> skipEmpty >>
-  liftA2 (,) parseDay (many parseActivityRecord)
+parseDayLog = do
+  skipCommentsAndEmpty
+  a <- liftA2 (,) parseDay (many parseActivityRecord)
+  skipCommentsAndEmpty
+  return a
 
 -- | Parses an activity log.
 parseLog :: Parser Log
