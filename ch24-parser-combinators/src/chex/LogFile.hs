@@ -27,7 +27,15 @@ data ActivityRecord =
   ActivityRecord { startTime :: Time
                  , activity  :: Activity
                  , endTime   :: Time
-                 } deriving (Eq, Show)
+                 } deriving (Eq)
+
+-- | Renders 'ActivityRecord' in the way
+-- that allows our parser to parse it back.
+instance Show ActivityRecord where
+  show (ActivityRecord s a _) =
+    Prelude.concat [ DT.formatTime DT.defaultTimeLocale "%R" s
+                   , " "
+                   , show a ]
 
 -- | Comment, till the end of line.
 comment :: Parser String
