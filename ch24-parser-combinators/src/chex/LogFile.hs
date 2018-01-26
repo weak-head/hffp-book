@@ -91,6 +91,8 @@ parseTime = do
 -- | Parses and validates the day.
 parseDay :: Parser DT.Day
 parseDay = do
+  char '#'
+  skipMany space
   year <- fromIntegral <$> natural
   char '-'
   month <- fromIntegral <$> natural
@@ -130,7 +132,6 @@ parseActivityRecord = do
 parseDayLog :: Parser (DT.Day, [ActivityRecord])
 parseDayLog =
   skipEmpty >> skipComments >> skipEmpty >>
-  char '#' >> skipMany space >>
   liftA2 (,) parseDay (many parseActivityRecord)
 
 -- | Parses an activity log.
