@@ -27,4 +27,5 @@ Probably, the most interesting for you would be the following:
 > Parsers
 
 * [Semantic version parser](ch24-parser-combinators/src/chex/SemVer.hs)
+* [Activity log file parser](ch24-parser-combinators/src/chex/LogFile.hs)
 
