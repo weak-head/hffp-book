@@ -6,6 +6,7 @@ module LogFile where
 import           Control.Applicative
 import           Control.Monad
 import           Data.ByteString (ByteString)
+import qualified Data.List as DL
 import qualified Data.Map as DM
 import           Data.Text hiding (empty)
 import qualified Data.Time as DT
@@ -19,8 +20,8 @@ type Activity     = Text
 
 -- | The Activity Log.
 newtype Log =
-  Log { log :: DM.Map DT.Day [ActivityRecord] }
-  deriving (Eq, Show)
+  Log { getLog :: DM.Map DT.Day [ActivityRecord] }
+  deriving (Eq)
 
 -- | Represents a single Log record.
 data ActivityRecord =
@@ -28,6 +29,19 @@ data ActivityRecord =
                  , activity  :: Activity
                  , endTime   :: Time
                  } deriving (Eq)
+
+-- | Renders 'Log' in the way
+-- that allows our parser to parse it back.
+instance Show Log where
+  show = DM.foldrWithKey render "" . getLog
+    where render day ar acc =
+            DL.concat [ "# "
+                      , DT.formatTime DT.defaultTimeLocale "%F" day
+                      , "/n"
+                      , DL.intercalate "/n" $ DL.map show ar
+                      , "/n"
+                      , acc
+                      ]
 
 -- | Renders 'ActivityRecord' in the way
 -- that allows our parser to parse it back.
