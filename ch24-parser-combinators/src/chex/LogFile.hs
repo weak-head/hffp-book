@@ -14,88 +14,32 @@ import           Text.RawString.QQ
 import           Text.Trifecta
 --import Debug.Trace (traceShowM)
 
-theLogExample :: ByteString
-theLogExample = [r|
--- a comment
-
--- another comment
-
--- and this one
-
-# 2025-02-05
-
--- Comments
-
-08:00 Breakfast
-09:00 Sanitizing moisture collector
-11:00 Exercising in high-grav gym
-12:00 Lunch
--- The comment
--- And another one
-13:00 Programming -- and here
-17:00 Commuting home in rover
-17:30 R&R
-19:00 Dinner
-21:00 Shower
-21:15 Read
-22:00 Sleep
-
--- Improve this
-
-# 2025-02-07 -- dates not nececessarily sequential
-08:00 Breakfast -- should I try skippin bfast?
-09:00 Bumped head, passed out
-13:36 Wake up, hadache
-13:37 Go to medbay
-13:40 Patch self up
-13:45 Commute home for rest
-14:15 Read
-21:00 Dinner
-21:15 Read
-22:00 Sleep
-
--- some comments here
-
--- and here
-
-|]
-
-
--- > fromGregorianValid 2008 10 22
--- Just 2008-10-22
--- > show $ fromJust $ fromGregorianValid 2008 10 22
--- "2008-10-22" :: String
--- https://two-wrongs.com/haskell-time-library-tutorial
---
--- > parseTimeM True defaultTimeLocale "%R" "12:00" :: Maybe TimeOfDay
-
 type Time         = DT.TimeOfDay
 type Activity     = Text
 
+-- | The Activity Log.
 newtype Log =
   Log { log :: DM.Map DT.Day [ActivityRecord] }
   deriving (Eq, Show)
 
+-- | Represents a single Log record.
 data ActivityRecord =
   ActivityRecord { startTime :: Time
                  , activity  :: Activity
                  , endTime   :: Time
                  } deriving (Eq, Show)
 
+-- | Comment, till the end of line.
 comment :: Parser String
 comment =
   string "--" >>
   manyTill anyChar (void newline <|> eof)
 
+-- | Space, tab or newline.
 blank :: Parser Char
 blank = space <|> newline <|> tab
 
-skipComments :: Parser ()
-skipComments = skipMany comment
-
-skipEmpty :: Parser ()
-skipEmpty = skipMany blank
-
+-- | Skips a combination of comments and blank lines.
 skipCommentsAndEmpty :: Parser ()
 skipCommentsAndEmpty =
   skipMany (comment <|> (blank >> return ""))
@@ -135,7 +79,7 @@ lookAheadEndTime =
 parseActivity :: Parser Activity
 parseActivity = do
   a <- manyTill anyChar commentOrNewLine
-  skipComments
+  skipCommentsAndEmpty
   return $ strip $ pack a
   where
     commentOrNewLine = (try $ lookAhead $ string "--") <|>
@@ -162,25 +106,57 @@ parseDayLog = do
 parseLog :: Parser Log
 parseLog = (Log . DM.fromList) <$> many parseDayLog
 
-main = do
-  let pt = parseByteString parseTime mempty
-  print $ pt "12:00"
-  print $ pt "ab"
-  print $ pt "33:22"
-  print $ pt "01:11"
-  print $ pt "00:00"
-  print $ pt "12:77"
-  print $ pt "12:59"
-  ---
-  let pr = parseByteString (many parseActivityRecord) mempty
-  print $ pr "08:00 Breakfast -- should I try skippin bfast?\n09:33 Activity"
-  print $ pr "09:33 Activity\nAnd something else"
-  print $ pr "99:99 Something"
-  print $ pr "Other 99:99"
-  ---
-  let pd = parseByteString parseDayLog mempty
-  print $ pd "--some comments\n# 2027-09-19\n08:00 Breakfast --comments\n09:00 Sanitizing moisture collector"
-  ---
-  let pl = parseByteString parseLog mempty
-  print $ pl "--some comments\n# 2027-09-19 -- dates not nececessarily sequential\n08:00 Breakfast --comments\n09:00 Sanitizing moisture collector\n\n# 2027-09-20\n08:00 Breakfast --comments\n09:00 Sanitizing moisture collector"
-  print $ pl theLogExample
+main = print $ parseByteString parseLog mempty theLogExample
+
+-----
+
+theLogExample :: ByteString
+theLogExample = [r|
+-- a comment
+
+-- another comment
+
+-- and this is a comment as well
+
+# 2025-02-05
+
+-- Comments
+
+-- More comments here
+
+08:00 Breakfast
+09:00 Sanitizing moisture collector
+11:00 Exercising in high-grav gym
+12:00 Lunch
+-- The comment
+
+-- And another one
+13:00 Programming -- and here
+17:00 Commuting home in rover
+17:30 R&R
+
+
+19:00 Dinner
+21:00 Shower
+21:15 Read
+22:00 Sleep
+
+-- Improve this
+
+# 2025-02-07 -- dates not nececessarily sequential
+08:00 Breakfast -- should I try skippin bfast?
+09:00 Bumped head, passed out
+13:36 Wake up, hadache
+13:37 Go to medbay
+13:40 Patch self up
+13:45 Commute home for rest
+14:15 Read
+21:00 Dinner
+21:15 Read
+22:00 Sleep
+
+-- some comments here
+
+-- and here
+
+|]
