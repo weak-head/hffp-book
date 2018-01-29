@@ -82,6 +82,24 @@ parseIPv4 = do
   b4 <- parseByte
   return $ IPv4Address $ b1 .|. b2 .|. b3 .|. b4
 
+parseFullIPv6 :: Parser IPv6Address
+parseFullIPv6 = liftA2 IPv6Address parseHexWord (char ':' >> parseHexWord)
+  where
+    parseHexWord = do
+      h1 <- flip shiftL 48 <$> parseHex
+      char ':'
+      h2 <- flip shiftL 32 <$> parseHex
+      char ':'
+      h3 <- flip shiftL 16 <$> parseHex
+      char ':'
+      h4 <- parseHex
+      return $ h1 .|. h2 .|. h3 .|. h4
+
+parseIPv6 :: Parser IPv6Address
+parseIPv6 = do
+  parseFullIPv6
+
 main = do
   print $ parseString parseIPv4 mempty "172.16.254.1"
-  print $ parseString parseHex mempty "ff23"
+  print $ parseString parseHex mempty "ffff"
+  print $ parseString parseIPv6 mempty "FE80:0000:0000:0000:0202:B3FF:FE1E:8329"
