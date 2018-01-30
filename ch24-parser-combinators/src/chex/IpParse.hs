@@ -31,6 +31,12 @@ data IPv6Address =
   IPv6Address Word64 Word64
   deriving (Eq, Ord, Show)
 
+-- | Represents an IP address.
+data IPAddress =
+    IPv4 IPv4Address
+  | IPv6 IPv6Address
+  deriving (Show, Eq, Ord)
+
 -- | Renders IPv4 address as string.
 instance Show IPv4Address where
   show (IPv4Address v) =
@@ -126,8 +132,17 @@ parseShortIPv6 = do
 parseIPv6 :: Parser IPv6Address
 parseIPv6 = try parseFullIPv6 <|> parseShortIPv6
 
+-- | Parses IP address.
+parseIP :: Parser IPAddress
+parseIP = try $ IPv4 <$> parseIPv4 <|>
+                IPv6 <$> parseIPv6
+
 main = do
---  print $ parseString parseIPv4 mempty "172.16.254.1"
---  print $ parseString parseHex mempty "ffff"
-  print $ parseString parseIPv6 mempty "FE80:0000:0000:0000:0202:B3FF:FE1E:8329"
-  print $ parseString parseIPv6 mempty "FE80::0202:B3FF:FE1E:8329"
+  let pip = print . parseString parseIP mempty
+
+  -- IPv4
+  pip "172.16.254.1"
+  
+  -- IPv6
+  pip "FE80:0000:0000:0000:0202:B3FF:FE1E:8329"
+  pip "FE80::0202:B3FF:FE1E:8329"
