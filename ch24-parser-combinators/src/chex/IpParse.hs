@@ -3,7 +3,7 @@
 module IpParse where
 
 import Data.Foldable (foldl')
-import Data.Char (digitToInt)
+import Data.Char (digitToInt, intToDigit)
 import Data.Bits
 import Data.Word
 import Text.Trifecta
@@ -29,7 +29,7 @@ newtype IPv4Address =
 --
 data IPv6Address =
   IPv6Address Word64 Word64
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord)
 
 -- | Represents an IP address.
 data IPAddress =
@@ -40,14 +40,38 @@ data IPAddress =
 -- | Renders IPv4 address as string.
 instance Show IPv4Address where
   show (IPv4Address v) =
-    concat [ show $ shiftR v 24 .&. 255
-           , "."
-           , show $ shiftR v 16 .&. 255
-           , "."
-           , show $ shiftR v 8  .&. 255
-           , "."
+    concat [ show $ shiftR v 24 .&. 255 , "."
+           , show $ shiftR v 16 .&. 255 , "."
+           , show $ shiftR v  8 .&. 255 , "."
            , show $ v .&. 255
            ]
+
+-- | Renders IPv6 address as string.
+instance Show IPv6Address where
+  show (IPv6Address mj mn) =
+    concat [ showHex $ shiftR mj 48 .&. 65535 , ":"
+           , showHex $ shiftR mj 32 .&. 65535 , ":"
+           , showHex $ shiftR mj 16 .&. 65535 , ":"
+           , showHex $ shiftR mj  0 .&. 65535 , ":"
+           , showHex $ shiftR mn 48 .&. 65535 , ":"
+           , showHex $ shiftR mn 32 .&. 65535 , ":"
+           , showHex $ shiftR mn 16 .&. 65535 , ":"
+           , showHex $ shiftR mn  0 .&. 65535
+           ]
+    where
+      -- 'Numeric' can do this (showHex, showIntAtBase)
+      showHex x = toBaseNum (fromInteger $ toInteger x) 16 mapDecToHex      
+      toBaseNum x base fx
+        | x < base  = [fx x]
+        | otherwise = toBaseNum (x `div` base) base fx ++ [fx $ x `mod` base]
+      mapDecToHex x
+        | x < 10  = intToDigit x
+        | x == 10 = 'A'
+        | x == 11 = 'B'
+        | x == 12 = 'C'
+        | x == 13 = 'D'
+        | x == 14 = 'E'
+        | x == 15 = 'F'
 
 -- | Parses a natural number (range 0-255).
 parseByte :: Parser Word32
@@ -110,11 +134,14 @@ parseShortIPv6 = do
   h  <- some (try parseOptHex)
   string "::"
   h' <- (try $ many parseOptHex) <|> return []
-  return $ wrap $ fill h h'
+  if (length h + length h') > 7 -- up to 7 parts, 16 bits each
+    then empty
+    else return $ wrap $ fill h h'
   where
     parseOptHex = optional (char ':') >> parseHex
     fill xs ys  =
       concat [ xs
+             -- IPv6 has 8 sections, 16 bits each
              , replicate (8 - (length xs + length ys)) 0
              , ys
              ]
@@ -137,12 +164,18 @@ parseIP :: Parser IPAddress
 parseIP = try $ IPv4 <$> parseIPv4 <|>
                 IPv6 <$> parseIPv6
 
+
 main = do
   let pip = print . parseString parseIP mempty
 
   -- IPv4
   pip "172.16.254.1"
+  pip "10.0.0.0"
+  pip "0.0.0.0"
+  pip "255.255.255.255"
+  pip "192.168.1.1"
   
   -- IPv6
   pip "FE80:0000:0000:0000:0202:B3FF:FE1E:8329"
   pip "FE80::0202:B3FF:FE1E:8329"
+  pip "FE80::"
