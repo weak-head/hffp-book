@@ -157,12 +157,13 @@ parseShortIPv6 = do
 
 -- | Parses IPv6 address.
 parseIPv6 :: Parser IPv6Address
-parseIPv6 = try parseFullIPv6 <|> parseShortIPv6
+parseIPv6 = (try parseFullIPv6) <|>
+            parseShortIPv6
 
 -- | Parses IP address.
 parseIP :: Parser IPAddress
-parseIP = try $ IPv4 <$> parseIPv4 <|>
-                IPv6 <$> parseIPv6
+parseIP = (try $ IPv4 <$> parseIPv4) <|>
+          IPv6 <$> parseIPv6
 
 
 main = do
@@ -179,3 +180,8 @@ main = do
   pip "FE80:0000:0000:0000:0202:B3FF:FE1E:8329"
   pip "FE80::0202:B3FF:FE1E:8329"
   pip "FE80::"
+  pip "0:0:0:0:0:ffff:ac10:fe01"
+  pip "2001:DB8::8:800:200C:417A"
+  pip "2001:db8:0:0:0:0:2:1"
+  pip "2001:db8::1"
+  pip "fe80::1ff:fe23:4567:890a"
