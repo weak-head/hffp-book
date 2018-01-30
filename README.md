@@ -28,4 +28,4 @@ Probably, the most interesting for you would be the following:
 
 * [Semantic version parser](ch24-parser-combinators/src/chex/SemVer.hs)
 * [Activity log file parser](ch24-parser-combinators/src/chex/LogFile.hs)
-
+* [IPv4/IPv6 address parser](ch24-parser-combinators/src/chex/IpParse.hs)
