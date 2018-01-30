@@ -4,11 +4,9 @@ This repository contains source code, exercises, related topics and some additio
 
 ## Places worth to check
 
-There is a lot of random unstructured stuff here.  
-Probably, the most interesting for you would be the following:
+There is a lot of random unstructured stuff here. Probably, the most interesting for you would be the following:
 
-> The base library definitions and implementations
-
+The base library definitions and implementations:
 * [Monoid, Functor, Applicative, Monad, Foldable and Traversable class definitions](ch21-traversable/src/Sand/ClassDef.hs) 
 * [Identity](ch21-traversable/src/Sand/Identity.hs)
 * [Constant](ch21-traversable/src/Sand/Constant.hs)
@@ -19,13 +17,11 @@ Probably, the most interesting for you would be the following:
 * [Tree](ch21-traversable/src/Sand/Tree.hs)
 * [Function](ch21-traversable/src/Sand/Func.hs)
 
-> Reader and State
-
+Reader and State:
  * [Visualizing Reader](ch22-reader/src/Mread.hs)
  * [Visualizing State (+quick batch)](ch23-state/src/Moi.hs)
 
-> Parsers
-
+Parsers:
 * [Semantic version parser](ch24-parser-combinators/src/chex/SemVer.hs)
 * [Activity log file parser](ch24-parser-combinators/src/chex/LogFile.hs)
 * [IPv4/IPv6 address parser](ch24-parser-combinators/src/chex/IpParse.hs)
