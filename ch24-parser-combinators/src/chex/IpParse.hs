@@ -70,7 +70,7 @@ parseHex = do
       digits <- some baseDigit
       return $! foldl' (\x d -> base * x + toInteger (digitToInt d)) 0 digits
 
--- | Parses IPv4 addresss.
+-- | Parses IPv4 address.
 parseIPv4 :: Parser IPv4Address
 parseIPv4 = do
   b1 <- flip shiftL 24 <$> parseByte
@@ -82,6 +82,8 @@ parseIPv4 = do
   b4 <- parseByte
   return $ IPv4Address $ b1 .|. b2 .|. b3 .|. b4
 
+-- | Parses full representation of IPv6 address.
+-- Eg: FE80:0000:0000:0000:0202:B3FF:FE1E:8329
 parseFullIPv6 :: Parser IPv6Address
 parseFullIPv6 = liftA2 IPv6Address parseHexWord (char ':' >> parseHexWord)
   where
@@ -95,21 +97,37 @@ parseFullIPv6 = liftA2 IPv6Address parseHexWord (char ':' >> parseHexWord)
       h4 <- parseHex
       return $ h1 .|. h2 .|. h3 .|. h4
 
-parseShortIPv6 :: Parser [Word64]
+-- | Parses short representation of IPv6 address.
+-- Eg: FE80::0202:B3FF:FE1E:8329
+parseShortIPv6 :: Parser IPv6Address
 parseShortIPv6 = do
-  hs <- some parseOptHex
-  string "--"
-  hs2 <- (try $ many parseOptHex) <|> return []
-  return $ concat [hs, [999999], hs2]
+  h  <- some (try parseOptHex)
+  string "::"
+  h' <- (try $ many parseOptHex) <|> return []
+  return $ wrap $ fill h h'
   where
     parseOptHex = optional (char ':') >> parseHex
+    fill xs ys  =
+      concat [ xs
+             , replicate (8 - (length xs + length ys)) 0
+             , ys
+             ]
+    wrap ipa = IPv6Address
+               (shiftL (ipa!!0) 48 .|.
+                shiftL (ipa!!1) 32 .|.
+                shiftL (ipa!!2) 16 .|.
+                shiftL (ipa!!3) 0)
+               (shiftL (ipa!!4) 48 .|.
+                shiftL (ipa!!5) 32 .|.
+                shiftL (ipa!!6) 16 .|.
+                shiftL (ipa!!7) 0)
 
+-- | Parses IPv6 address.
 parseIPv6 :: Parser IPv6Address
-parseIPv6 = do
-  parseFullIPv6
+parseIPv6 = try parseFullIPv6 <|> parseShortIPv6
 
 main = do
 --  print $ parseString parseIPv4 mempty "172.16.254.1"
 --  print $ parseString parseHex mempty "ffff"
---  print $ parseString parseIPv6 mempty "FE80:0000:0000:0000:0202:B3FF:FE1E:8329"
-  print $ parseString parseShortIPv6 mempty "FE80:0000:0000:0000:0202:B3FF:FE1E:8329--0:0120:0"
+  print $ parseString parseIPv6 mempty "FE80:0000:0000:0000:0202:B3FF:FE1E:8329"
+  print $ parseString parseIPv6 mempty "FE80::0202:B3FF:FE1E:8329"
