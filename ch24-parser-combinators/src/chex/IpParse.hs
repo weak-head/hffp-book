@@ -95,11 +95,21 @@ parseFullIPv6 = liftA2 IPv6Address parseHexWord (char ':' >> parseHexWord)
       h4 <- parseHex
       return $ h1 .|. h2 .|. h3 .|. h4
 
+parseShortIPv6 :: Parser [Word64]
+parseShortIPv6 = do
+  hs <- some parseOptHex
+  string "--"
+  hs2 <- (try $ many parseOptHex) <|> return []
+  return $ concat [hs, [999999], hs2]
+  where
+    parseOptHex = optional (char ':') >> parseHex
+
 parseIPv6 :: Parser IPv6Address
 parseIPv6 = do
   parseFullIPv6
 
 main = do
-  print $ parseString parseIPv4 mempty "172.16.254.1"
-  print $ parseString parseHex mempty "ffff"
-  print $ parseString parseIPv6 mempty "FE80:0000:0000:0000:0202:B3FF:FE1E:8329"
+--  print $ parseString parseIPv4 mempty "172.16.254.1"
+--  print $ parseString parseHex mempty "ffff"
+--  print $ parseString parseIPv6 mempty "FE80:0000:0000:0000:0202:B3FF:FE1E:8329"
+  print $ parseString parseShortIPv6 mempty "FE80:0000:0000:0000:0202:B3FF:FE1E:8329--0:0120:0"
