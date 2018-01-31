@@ -45,6 +45,14 @@ instance (Applicative f, Applicative g) => Applicative (Compose f g) where
   --             m :: f (g a)
   (Compose f) <*> (Compose m) = Compose $ fmap (<*>) f <*> m
 
+-- Monad for Compose is not possible ^_^
+
+instance (Foldable f, Foldable g) => Foldable (Compose f g) where
+  foldMap f (Compose m) = foldMap (foldMap f) m
+
+instance (Traversable f, Traversable g) => Traversable (Compose f g) where
+  traverse = undefined
+
 ----------------------------------------------------------------------
 -- One less bit of structure
 newtype One f a =
