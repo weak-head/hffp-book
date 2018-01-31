@@ -23,13 +23,29 @@ newtype Compose f g a =
 -- > :t Compose xs
 -- Compose [Just (1::Int), Nothing] :: Compose [] Maybe Int
 
+
 instance Functor Identity where
   fmap f (Identity a) = Identity (f a)
+
 
 instance (Functor f, Functor g) => Functor (Compose f g) where
   fmap f (Compose m) = Compose $ (fmap . fmap) f m
 
+instance (Applicative f, Applicative g) => Applicative (Compose f g) where
+  pure a = Compose $ pure $ pure a
 
+  -- (<*>) :: f (a -> b) -> (f a -> f b)
+  --
+  -- Compose f g (a -> b) -> Compose f g a -> Compose f g b
+  --
+  --    f :: f (g (a -> b))
+  --    m :: f (g     a)
+  --
+  --  fmap (<*>) f => f (g a -> g b)
+  --             m :: f (g a)
+  (Compose f) <*> (Compose m) = Compose $ fmap (<*>) f <*> m
+
+----------------------------------------------------------------------
 -- One less bit of structure
 newtype One f a =
   One (f a)
