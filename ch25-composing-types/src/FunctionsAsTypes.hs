@@ -51,7 +51,7 @@ instance (Foldable f, Foldable g) => Foldable (Compose f g) where
   foldMap f (Compose m) = foldMap (foldMap f) m
 
 instance (Traversable f, Traversable g) => Traversable (Compose f g) where
-  traverse = undefined
+  traverse f (Compose m) = Compose <$> traverse (traverse f) m
 
 ----------------------------------------------------------------------
 -- One less bit of structure
