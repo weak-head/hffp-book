@@ -1,5 +1,7 @@
 module MonadTransformers where
 
+import Control.Monad (join)
+
 --- Monadic stacking -------------------------------------------------
 
 f1 = fmap (+1) (Just 1)
@@ -43,3 +45,29 @@ instance Monad Identity where
 instance Monad m => Monad (IdentityT m) where
   return = pure
   (IdentityT v) >>= f = IdentityT $ v >>= (runIdentityT . f)
+
+--
+-- Another way to look at this.
+--
+--(IdentityT v) >>= f =
+--  let aimb = join $ fmap runIdentityT $ fmap f v
+--  in IdentityT aimb
+--
+--(IdentityT v) >>= f =
+--  let aimb = join $ fmap (runIdentityT . f) v
+--  in IdentityT aimb
+--
+--(IdentityT v) >>= f =
+--  let aimb = v >>= (runIdentityT . f)
+--  in IdentityT aimb
+
+
+-- Functor can cover pattern match:
+-- > (IdentityT ma)
+--
+-- Monad can cover ability to bind functions:
+-- > ma >>= f
+--
+-- But none of them can cover the fold of the actual structure
+-- and the additional repacking at the end:
+-- > IdentityT .. runIdentityT ..
