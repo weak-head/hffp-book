@@ -1,5 +1,8 @@
 module EitherT where
 
+-- either
+import Data.Either.Combinators (swapEither)
+
 newtype EitherT e m a =
   EitherT { runEitherT :: m (Either e a) }
 
@@ -18,3 +21,6 @@ instance Monad m => Monad (EitherT e m) where
       case v of
         Left  e -> return $ Left e
         Right a -> runEitherT $ f a
+
+swapEitherT :: Functor m => EitherT e m a -> EitherT a m e
+swapEitherT (EitherT m) = EitherT $ fmap swapEither m

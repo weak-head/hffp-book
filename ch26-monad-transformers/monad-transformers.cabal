@@ -25,3 +25,4 @@ library
                      , aeson
                      , scientific
                      , time
+                     , either
