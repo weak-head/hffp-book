@@ -24,3 +24,6 @@ instance Monad m => Monad (EitherT e m) where
 
 swapEitherT :: Functor m => EitherT e m a -> EitherT a m e
 swapEitherT (EitherT m) = EitherT $ fmap swapEither m
+
+eitherT :: Monad m => (a -> m c) -> (b -> m c) -> EitherT a m b -> m c
+eitherT f g (EitherT m) = m >>= either f g
