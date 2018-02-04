@@ -24,3 +24,13 @@ instance Applicative m => Applicative (MaybeT m) where
   pure = MaybeT . pure . Just
   (MaybeT f) <*> (MaybeT v) = MaybeT $ fmap (<*>) f <*> v
 
+
+
+instance Monad m => Monad (MaybeT m) where
+  return = pure
+  (MaybeT ma) >>= f =
+    MaybeT $ do
+      v <- ma
+      case v of
+        Nothing -> return Nothing
+        Just a  -> runMaybeT $ f a
