@@ -21,5 +21,5 @@ instance Monad m => Monad (StateT s m) where
   return = pure
   (StateT v) >>= f = StateT $
     \s -> do
-      (s', a) <- v s
-      runStateT (f s') a
+      (a, s') <- v s
+      runStateT (f a) s'
