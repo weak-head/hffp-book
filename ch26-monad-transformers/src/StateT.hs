@@ -16,3 +16,10 @@ instance Monad m => Applicative (StateT s m) where
     \s -> do
       (g, s') <- f s
       runStateT (fmap g v) s'
+
+instance Monad m => Monad (StateT s m) where
+  return = pure
+  (StateT v) >>= f = StateT $
+    \s -> do
+      (s', a) <- v s
+      runStateT (f s') a
