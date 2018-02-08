@@ -35,3 +35,7 @@ evaluate = readerUnwrap ()
 showEvaluate :: IO ()
 showEvaluate = evaluate >>= print
 -- Right (Just 1)
+
+embedded' :: MaybeT (ExceptT String (ReaderT () IO)) Int
+embedded' =
+  MaybeT $ ExceptT $ ReaderT $ return <$> const (Right (Just 1))
