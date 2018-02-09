@@ -23,8 +23,9 @@ import Control.Monad.Trans.Except
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.State.Lazy hiding (get)
 import Data.Monoid (mconcat)
+import Data.Text.Internal.Lazy
 import Web.Scotty
-import Web.Scotty.Internal.Types (ActionT(..))
+import Web.Scotty.Internal.Types -- (ActionT(..))
 
 main = scotty 3000 $ do
   get "/:word" $ do
@@ -52,9 +53,54 @@ main = scotty 3000 $ do
                          return (a, s))
       ) (putStrLn "hello")
 
+    wrapFunc
+
     html $ mconcat [ "<h1>Scotty, "
                    , beam
                    , " me up!</h1>"]
+
+
+{-
+theFunc :: ActionEnv
+        -> ScottyResponse
+        -> IO (Either (ActionError String) Int, ScottyResponse)
+theFunc = undefined
+-}
+wrapFunc :: ActionT Text IO ()
+wrapFunc = actionWrap
+  where
+
+    actionWrap = ActionT exceptWrap
+
+    ------
+
+    stateWrap :: StateT ScottyResponse IO ()
+    stateWrap = StateT $ \s -> putStrLn "hello" >> return ((), s)
+--  stateWrap = StateT stateF
+
+
+    readerWrap :: ReaderT ActionEnv (StateT ScottyResponse IO) ()
+    readerWrap = ReaderT $ \a -> StateT $ \s -> putStrLn "hello" >> return ((), s)
+--  readerWrap = ReaderT $ \a -> StateT stateF
+--  readerWrap = ReaderT readerF
+
+    exceptWrap :: ExceptT
+                    (ActionError Text)
+                    (ReaderT ActionEnv (StateT ScottyResponse IO))
+                    ()
+    exceptWrap = ExceptT $ liftM Right $ ReaderT $ \a -> StateT $ \s -> putStrLn "hello" >> return ((), s)
+--  exceptWrap = ExceptT $ liftM Right $ ReaderT $ \a -> StateT stateF
+--  exceptWrap = ExceptT exceptF
+
+    ------
+    stateF :: (Monad m) => ScottyResponse -> m (a, ScottyResponse)
+    stateF = undefined
+
+    readerF :: (Monad m) => ActionEnv -> m a
+    readerF = undefined
+
+    exceptF :: (Monad m) => m (Either (ActionError String) a)
+    exceptF = undefined
 
 {-
 lift :: (Monad m, MonadTrans t) => m a -> t m a
