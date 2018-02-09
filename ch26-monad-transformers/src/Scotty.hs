@@ -89,8 +89,14 @@ wrapFunc = actionWrap
                     (ReaderT ActionEnv (StateT ScottyResponse IO))
                     ()
     exceptWrap = ExceptT $ liftM Right $ ReaderT $ \a -> StateT $ \s -> putStrLn "hello" >> return ((), s)
+--  exceptWrap = ExceptT $ ReaderT $ \a -> StateT $ \s -> theActualFunc a s
 --  exceptWrap = ExceptT $ liftM Right $ ReaderT $ \a -> StateT stateF
 --  exceptWrap = ExceptT exceptF
+
+    ------
+
+    theActualFunc :: ActionEnv -> ScottyResponse -> IO (Either (ActionError Text) (), ScottyResponse)
+    theActualFunc a s = putStrLn "hello" >> return (Right (), s)
 
     ------
     stateF :: (Monad m) => ScottyResponse -> m (a, ScottyResponse)
