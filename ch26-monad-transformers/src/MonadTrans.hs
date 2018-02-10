@@ -1,5 +1,6 @@
 module MonadTrans where
 
+import Control.Monad.Trans.Class -- (lift)
 import Control.Monad (liftM)
 import EitherT
 import ReaderT
@@ -16,8 +17,8 @@ liftM :: Monad m =>       (a -> b) -> m a -> m b
 
 -}
 
-class MonadTrans t where
-  lift :: (Monad m) => m a -> t m a
+--class MonadTrans t where
+--  lift :: (Monad m) => m a -> t m a
 
 ----------------------------------------------------------------------
 

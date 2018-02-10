@@ -2,9 +2,15 @@
 
 module LiftIO where
 
-import Web.Scotty
 import Control.Monad.IO.Class
+import Control.Monad.Trans.Class -- (lift)
 import Data.Monoid (mconcat)
+import EitherT
+import MaybeT
+import MonadTrans
+import ReaderT
+import StateT
+import Web.Scotty
 
 main = scotty 3000 $ do
   get "/:word" $ do
@@ -16,8 +22,8 @@ main = scotty 3000 $ do
 
 ----------------------------------------------------------------------
 
-newtype IdentityT m a =
-  IdentityT { runIdentityT :: m a }
+--newtype IdentityT m a =
+--  IdentityT { runIdentityT :: m a }
 
 instance Functor m => Functor (IdentityT m) where
   fmap f (IdentityT m) = IdentityT $ fmap f m
@@ -37,4 +43,20 @@ instance MonadIO m => MonadIO (IdentityT m) where
 
 ----------------------------------------------------------------------
 
+instance MonadIO m => MonadIO (EitherT e m) where
+  liftIO = lift . liftIO
 
+----------------------------------------------------------------------
+
+instance MonadIO m => MonadIO (MaybeT m) where
+  liftIO = lift . liftIO
+
+----------------------------------------------------------------------
+
+instance MonadIO m => MonadIO (ReaderT r m) where
+  liftIO = lift . liftIO
+
+----------------------------------------------------------------------
+
+instance MonadIO m => MonadIO (StateT s m) where
+  liftIO = lift . liftIO
