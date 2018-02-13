@@ -1,6 +1,7 @@
 module ChEx where
 
 import Control.Monad.Trans.Reader
+import Control.Monad.Trans.State
 import Data.Functor.Identity
 
 ----------------------------------------------------------------------
@@ -51,5 +52,25 @@ p1 = runReaderT rPrintAndInc 1
 p2 :: IO [Integer]
 p2 = traverse (runReaderT rPrintAndInc) [1..10]
 -- "Hi: 1-10"
+
+----------------------------------------------------------------------
+
+sPrintIncAccum :: (Num a, Show a) => StateT a IO String
+sPrintIncAccum =
+  StateT $ \s -> do
+    print $ "Hi: " ++ show s
+    return (show s, s + 1)
+
+st1 = runStateT sPrintIncAccum 10
+-- Hi: 10
+-- ("10", 11)
+
+st2 = mapM (runStateT sPrintIncAccum) [1..5]
+-- Hi: 1
+-- Hi: 2
+-- Hi: 3
+-- Hi: 4
+-- Hi: 5
+-- [("1", 2), ("2", 3), ("3", 4), ("4", 5), ("5", 6)]
 
 ----------------------------------------------------------------------
