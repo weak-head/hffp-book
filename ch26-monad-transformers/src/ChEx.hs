@@ -37,3 +37,19 @@ s2 = fmap (runReader rShow') [1..10]
 -- ["1".."10"]
 
 ----------------------------------------------------------------------
+
+rPrintAndInc :: (Num a, Show a) => ReaderT a IO a
+rPrintAndInc =
+  ReaderT $ \n -> do
+    print $ "Hi: " ++ show n
+    return $ n + 1
+
+p1 :: IO Integer
+p1 = runReaderT rPrintAndInc 1
+-- "Hi: 1"
+
+p2 :: IO [Integer]
+p2 = traverse (runReaderT rPrintAndInc) [1..10]
+-- "Hi: 1-10"
+
+----------------------------------------------------------------------
