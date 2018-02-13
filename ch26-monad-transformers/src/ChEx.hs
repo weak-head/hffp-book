@@ -21,3 +21,19 @@ r2 = fmap (runReader rDec') [1..10]
 
 ----------------------------------------------------------------------
 
+rShow :: Show a => ReaderT a Identity String
+rShow = ReaderT $ \r -> Identity $ show r
+
+rShow' :: Show a => ReaderT a Identity String
+rShow' = ReaderT $ Identity . show
+
+
+s1 :: String
+s1 = runReader rShow' 1
+-- "1"
+
+s2 :: [String]
+s2 = fmap (runReader rShow') [1..10]
+-- ["1".."10"]
+
+----------------------------------------------------------------------
