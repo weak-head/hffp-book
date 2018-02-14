@@ -40,15 +40,12 @@ app =
   -- ActionT Text (ReaderT Config IO)
   get "/:key" $ do
     unprefixed <- param "key"
-    pref       <- lift $ ReaderT $ \r -> return $ prefix r
+    pref       <- lift $ ReaderT $ return . prefix
 
     let key' = mappend pref unprefixed
 
-    newInteger <- lift $ ReaderT $ \r -> do
-      m <- readIORef $ counts r
-      let (m', cnt) = bumpBoomp key' m
-      writeIORef (counts r) m'
-      return cnt
+    newInteger <- lift $ ReaderT $ \r ->
+      atomicModifyIORef' (counts r) (bumpBoomp key')
 
     html $ mconcat
       [ "<h1>Success! Count was: "
@@ -60,7 +57,9 @@ app =
 main :: IO ()
 main = do
   [prefixArg] <- getArgs
-  counter <- newIORef M.empty
+  counter     <- newIORef M.empty
+
   let config = Config counter (TL.pack prefixArg)
       runR r = runReaderT r config
+
   scottyT 3000 runR app
