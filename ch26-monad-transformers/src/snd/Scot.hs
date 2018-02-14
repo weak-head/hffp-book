@@ -17,10 +17,13 @@ data Config =
 
 act :: ActionT Text (ReaderT Config IO) ()
 act = do
+  k <- param "key"
   v <- lift $ ReaderT $ return . arguments
   html $ mconcat
     [ "<h1>App args: "
     , v
+    , "; key: "
+    , k
     , "</h1>" ]
 
 ----------------------------------------------------------------------
