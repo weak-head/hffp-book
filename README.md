@@ -29,3 +29,4 @@ Parsers:
 Monad transformers:
 * [MaybeT, ExceptT, ReaderT, StateT instances](ch26-monad-transformers/src/sand/Inst.hs)
 * [Scotty ActionT breakdown](ch26-monad-transformers/src/Scotty.hs)
+* [HitCounter (scotty, ReaderT, IORef)](ch26-monad-transformers/src/HitCounter.hs)
