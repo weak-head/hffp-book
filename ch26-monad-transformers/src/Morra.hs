@@ -25,19 +25,25 @@ data GameResult =
              , won :: Maybe Player }
   deriving ( Show )
 
+type Round = StateT GameState IO GameResult
 type Game = ReaderT GameConfig (StateT GameState IO) GameResult
 
 ----------------------------------------------------------------------
 
-oneRound :: Game
-oneRound =
-  ReaderT $ \conf ->
-    StateT $ \s ->
+-- oneRound :: Game
+-- oneRound =
+--   ReaderT $ \conf ->
+--     StateT $ \s ->
+--                 return (GameResult False (Just $ Player "Name"), s)
+
+makeRound :: Round
+makeRound = StateT $ \s ->
                 return (GameResult False (Just $ Player "Name"), s)
 
 -- | Play the Morra, best of N.
 makeGame :: Game
-makeGame = iterateWhile running oneRound
+makeGame = ReaderT $ \conf ->
+  iterateWhile running makeRound
 
 ----------------------------------------------------------------------
 
