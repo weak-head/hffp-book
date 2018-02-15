@@ -21,12 +21,13 @@ data GameState =
             , player2Score :: Int }
 
 data GameResult =
-  GameResult { running :: Bool
+  GameResult { p1S :: Int
+             , p2S :: Int
              , won :: Maybe Player }
   deriving ( Show )
 
 type Round = StateT GameState IO GameResult
-type Game = ReaderT GameConfig (StateT GameState IO) GameResult
+type Game  = ReaderT GameConfig (StateT GameState IO) GameResult
 
 ----------------------------------------------------------------------
 
@@ -38,13 +39,16 @@ type Game = ReaderT GameConfig (StateT GameState IO) GameResult
 
 makeRound :: Round
 makeRound = StateT $ \s ->
-                return (GameResult False (Just $ Player "Name"), s)
+                return (GameResult 2 1 (Just $ Player "Name"), s)
 
 -- | Play the Morra, best of N.
 makeGame :: Game
 makeGame = ReaderT $ \conf ->
-  iterateWhile running makeRound
-
+  iterateWhile (isRunning conf) makeRound
+  where
+    isRunning :: GameConfig -> GameResult -> Bool
+    isRunning c r = let s = bestOf c `div` 2
+                    in not $ (p1S r > s) || (p2S r > s)
 ----------------------------------------------------------------------
 
 runGame :: GameConfig -> Game -> IO GameResult
