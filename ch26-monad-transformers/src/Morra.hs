@@ -91,7 +91,7 @@ queryUser n = do
 -- | Tries to predict user behavior and gets
 -- the possible winning value.
 getAIChoise :: IO Int
-getAIChoise = randomRIO (0,1)
+getAIChoise = randomRIO (1,2)
 
 -- | Gets player choise. Depending on player kind
 -- either prompt a user or generate a value.
@@ -113,6 +113,18 @@ toGameResult s =
       LT -> Just $ p2Name s
       GT -> Just $ p1Name s
 
+-- | Print choises and score.
+printChoicesAndScore :: Int -> Int -> Bool -> GameState -> IO ()
+printChoicesAndScore p1v p2v p1win s = do
+  let p1n = unpack $ getPlayerName $ p1Name s
+      p2n = unpack $ getPlayerName $ p2Name s
+  liftIO $ putStrLn $ concat
+    [ p1n, " has chosen ", show p1v, "; "
+    , p2n, " has chosen ", show p2v, "; "
+    , bool p2n p1n p1win, "'s victory; "
+    , "New score: "
+    , show $ p1Score s , "-" , show $ p2Score s ]
+
 -- | Runs one round of the Mora game.
 oneRound :: Round
 oneRound = StateT $ \s -> do
@@ -121,6 +133,7 @@ oneRound = StateT $ \s -> do
   let (p1p, p2p) = evalScorePoints p1v p2v (fe s)
       s' = s { p1Score = p1Score s + p1p
              , p2Score = p2Score s + p2p }
+  liftIO $ printChoicesAndScore p1v p2v (p1p == 1) s'
   return (toGameResult s', s')
 
 -- | Creates the Morra game.
