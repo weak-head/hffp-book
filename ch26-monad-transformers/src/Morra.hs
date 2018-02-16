@@ -2,13 +2,14 @@
 
 module Morra where
 
+import Control.Monad.Loops ( iterateWhile )
+import Control.Monad.Trans.Class
+import Control.Monad.Trans.Reader
+import Control.Monad.Trans.State
 import Data.Bits ( xor )
 import Data.Bool ( bool )
-import Control.Monad.Trans.Class
 import Data.Text.Lazy
-import Control.Monad.Trans.State
-import Control.Monad.Trans.Reader
-import Control.Monad.Loops ( iterateWhile )
+import System.Random ( randomRIO )
 
 ----------------------------------------------------------------------
 
@@ -68,8 +69,23 @@ evalScorePoints a b p =
   in (bti $ not r, bti r)
   where bti = bool 0 1
 
+-- | Query user for the choise.
+queryUser :: IO Int
+queryUser = do
+  putStr "Your choise: "
+  readLn -- no error handling yet
+
+-- | Tries to predict user behavior and gets
+-- the possible winning value.
+getAIChoise :: IO Int
+getAIChoise = randomRIO (0,1)
+
+-- | Gets player choise. Depending on player kind
+-- either prompt a user or generate a value.
 getPlayerChoise :: PlayerKind -> IO Int
-getPlayerChoise _ = return 1
+getPlayerChoise kind = case kind of
+  PL -> queryUser
+  AI -> getAIChoise
 
 -- | Converts 'GameState' to 'GameResult'.
 toGameResult :: GameState -> GameResult
