@@ -3,6 +3,7 @@
 module Morra where
 
 import qualified Control.Exception as Ex
+import           Control.Monad.IO.Class ( liftIO )
 import           Control.Monad.Loops ( iterateWhile )
 import           Control.Monad.Trans.Class
 import           Control.Monad.Trans.Reader
@@ -133,9 +134,17 @@ theGame = ReaderT $ \conf ->
 
 ----------------------------------------------------------------------
 
+-- | Outputs the even player.
+printEvenPlayer :: GameConfig -> IO ()
+printEvenPlayer conf = do
+  let pl = bool (p2N conf) (p1N conf) (firstEven conf)
+  putStrLn $ concat [ unpack $ getPlayerName pl
+                    , " has been selected as Even player." ]
+
 -- | Runs the game based on the provided config.
 runGame :: Game -> GameConfig -> IO GameResult
-runGame game conf =
+runGame game conf = do
+  liftIO $ printEvenPlayer conf
   fst <$> runStateT (runReaderT game conf) initialState
   where
     initialState = GameState
