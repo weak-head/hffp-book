@@ -2,14 +2,15 @@
 
 module Morra where
 
-import Control.Monad.Loops ( iterateWhile )
-import Control.Monad.Trans.Class
-import Control.Monad.Trans.Reader
-import Control.Monad.Trans.State
-import Data.Bits ( xor )
-import Data.Bool ( bool )
-import Data.Text.Lazy hiding (concat)
-import System.Random ( randomRIO )
+import qualified Control.Exception as Ex
+import           Control.Monad.Loops ( iterateWhile )
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Reader
+import           Control.Monad.Trans.State
+import           Data.Bits ( xor )
+import           Data.Bool ( bool )
+import           Data.Text.Lazy hiding (concat)
+import           System.Random ( randomRIO )
 
 ----------------------------------------------------------------------
 
@@ -72,7 +73,11 @@ queryUser n = do
   putStr $ concat [ "Your choise, "
                   , unpack $ getPlayerName n
                   , ": " ]
-  readLn -- no error handling yet
+  Ex.catch readLn handler
+  where handler :: Ex.IOException -> IO Int
+        handler _ = do
+          putStrLn "Cannot parse the input."
+          queryUser n
 
 -- | Tries to predict user behavior and gets
 -- the possible winning value.
