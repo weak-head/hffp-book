@@ -10,7 +10,7 @@ import           Control.Monad.Trans.State
 import           Data.Bits ( xor )
 import           Data.Bool ( bool )
 import           Data.Text.Lazy hiding (concat)
-import           System.Random ( randomRIO )
+import           System.Random ( randomRIO, randomIO )
 
 ----------------------------------------------------------------------
 
@@ -134,8 +134,8 @@ theGame = ReaderT $ \conf ->
 ----------------------------------------------------------------------
 
 -- | Runs the game based on the provided config.
-runGame :: GameConfig -> Game -> IO GameResult
-runGame conf game =
+runGame :: Game -> GameConfig -> IO GameResult
+runGame game conf =
   fst <$> runStateT (runReaderT game conf) initialState
   where
     initialState = GameState
@@ -147,7 +147,22 @@ runGame conf game =
       , p2Name  = p2N conf
       , fe      = firstEven conf }
 
-main = do
-  let conf  = GameConfig 3 PvE (PlayerName "John") (PlayerName "AI") True
-  gameResult <- runGame conf theGame
-  print gameResult
+-- | Constructs the game configuration.
+buildGameConfig :: IO GameConfig
+buildGameConfig = do
+  fstEv <- randomIO
+  return GameConfig  { bestOf    = 3
+                     , gameKind  = PvE
+                     , p1N       = PlayerName "John"
+                     , p2N       = PlayerName "AI"
+                     , firstEven = fstEv }
+
+-- | Outputs the final game result.
+printGameResult :: GameResult -> IO ()
+printGameResult = print
+
+main :: IO ()
+main =
+  buildGameConfig >>=
+  runGame theGame >>=
+  printGameResult
