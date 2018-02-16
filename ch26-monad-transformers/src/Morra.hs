@@ -10,16 +10,34 @@ import Control.Monad.Loops ( iterateWhile )
 
 ----------------------------------------------------------------------
 
+-- | There are there possible game types:
+--   * Player vs Player
+--   * Player vs AI
+--   * AI vs AI
+data GameKind = PvP | PvE | EvE deriving (Show)
+
+-- | A player could be an actula human or AI.
+data PlayerKind = PL | AI deriving (Show)
+
+-- | The player name.
 newtype Player = Player Text
-  deriving ( Show )
+  deriving (Show)
 
+-- | The game configuration.
 data GameConfig =
-  GameConfig { bestOf :: Int }
+  GameConfig { bestOf :: Int
+             , gameKind :: GameKind
+             , p1Name :: Player
+             , p2Name :: Player }
 
+-- | The game state.
 data GameState =
   GameState { player1Score :: Int
-            , player2Score :: Int }
+            , player2Score :: Int
+            , player1Kind :: PlayerKind
+            , player2Kind :: PlayerKind }
 
+-- | The game result.
 data GameResult =
   GameResult { p1S :: Int
              , p2S :: Int
@@ -31,33 +49,28 @@ type Game  = ReaderT GameConfig (StateT GameState IO) GameResult
 
 ----------------------------------------------------------------------
 
--- oneRound :: Game
--- oneRound =
---   ReaderT $ \conf ->
---     StateT $ \s ->
---                 return (GameResult False (Just $ Player "Name"), s)
+oneRound :: Round
+oneRound = StateT $ \s ->
+   return (GameResult 2 1 (Just $ Player "Name"), s)
 
-makeRound :: Round
-makeRound = StateT $ \s ->
-                return (GameResult 2 1 (Just $ Player "Name"), s)
-
--- | Play the Morra, best of N.
-makeGame :: Game
-makeGame = ReaderT $ \conf ->
-  iterateWhile (isRunning conf) makeRound
+-- | Play the Morra.
+theGame :: Game
+theGame = ReaderT $ \conf ->
+  iterateWhile (isRunning conf) oneRound
   where
     isRunning :: GameConfig -> GameResult -> Bool
     isRunning c r = let s = bestOf c `div` 2
                     in not $ (p1S r > s) || (p2S r > s)
+
 ----------------------------------------------------------------------
 
 runGame :: GameConfig -> Game -> IO GameResult
 runGame conf game =
   fst <$> runStateT (runReaderT game conf) initialState
   where
-    initialState = GameState 0 0
+    initialState = GameState 0 0 PL AI
 
 main = do
-  let conf  = GameConfig 3
-  gameResult <- runGame conf makeGame
+  let conf  = GameConfig 3 PvE (Player "John") (Player "AI")
+  gameResult <- runGame conf theGame
   print gameResult
