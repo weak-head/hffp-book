@@ -27,15 +27,17 @@ newtype Player = Player Text
 data GameConfig =
   GameConfig { bestOf :: Int
              , gameKind :: GameKind
-             , p1Name :: Player
-             , p2Name :: Player }
+             , p1N :: Player
+             , p2N :: Player }
 
 -- | The game state.
 data GameState =
-  GameState { player1Score :: Int
-            , player2Score :: Int
-            , player1Kind :: PlayerKind
-            , player2Kind :: PlayerKind }
+  GameState { p1Score :: Int
+            , p2Score :: Int
+            , p1Kind :: PlayerKind
+            , p2Kind :: PlayerKind
+            , p1Name :: Player
+            , p2Name :: Player }
 
 -- | The game result.
 data GameResult =
@@ -49,9 +51,32 @@ type Game  = ReaderT GameConfig (StateT GameState IO) GameResult
 
 ----------------------------------------------------------------------
 
+evalScorePoints :: Int -> Int -> (Int, Int)
+evalScorePoints _ _ = (1, 0)
+
+getPlayerChoise :: PlayerKind -> IO Int
+getPlayerChoise _ = return 1
+
+toGameResult :: GameState -> GameResult
+toGameResult s =
+  GameResult { p1S = p1Score s
+             , p2S = p2Score s
+             , won = winner
+             }
+  where
+    winner = case compare (p1Score s) (p2Score s) of
+      EQ -> Nothing
+      LT -> Just $ p2Name s
+      GT -> Just $ p1Name s
+
 oneRound :: Round
-oneRound = StateT $ \s ->
-   return (GameResult 2 1 (Just $ Player "Name"), s)
+oneRound = StateT $ \s -> do
+  p1v <- getPlayerChoise $ p1Kind s
+  p2v <- getPlayerChoise $ p2Kind s
+  let (p1p, p2p) = evalScorePoints p1v p2v
+      s' = s { p1Score = p1Score s + p1p
+             , p2Score = p2Score s + p2p }
+  return (toGameResult s', s')
 
 -- | Play the Morra.
 theGame :: Game
@@ -68,7 +93,7 @@ runGame :: GameConfig -> Game -> IO GameResult
 runGame conf game =
   fst <$> runStateT (runReaderT game conf) initialState
   where
-    initialState = GameState 0 0 PL AI
+    initialState = GameState 0 0 PL AI (p1N conf) (p2N conf)
 
 main = do
   let conf  = GameConfig 3 PvE (Player "John") (Player "AI")
