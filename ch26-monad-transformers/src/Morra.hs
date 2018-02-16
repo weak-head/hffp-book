@@ -8,7 +8,7 @@ import Control.Monad.Trans.Reader
 import Control.Monad.Trans.State
 import Data.Bits ( xor )
 import Data.Bool ( bool )
-import Data.Text.Lazy
+import Data.Text.Lazy hiding (concat)
 import System.Random ( randomRIO )
 
 ----------------------------------------------------------------------
@@ -22,11 +22,8 @@ data GameKind = PvP | PvE | EvE deriving (Show, Eq)
 -- | Human or IO.
 data PlayerKind = PL | AI deriving (Show)
 
--- | Wheter player1 or player2 are even.
-data Even = Player1 | Player2 deriving (Show, Eq)
-
 -- | The player name.
-newtype PlayerName = PlayerName Text
+newtype PlayerName = PlayerName { getPlayerName :: Text }
   deriving (Show)
 
 -- | The game configuration.
@@ -70,9 +67,11 @@ evalScorePoints a b p =
   where bti = bool 0 1
 
 -- | Query user for the choise.
-queryUser :: IO Int
-queryUser = do
-  putStr "Your choise: "
+queryUser :: PlayerName -> IO Int
+queryUser n = do
+  putStr $ concat [ "Your choise, "
+                  , unpack $ getPlayerName n
+                  , ": " ]
   readLn -- no error handling yet
 
 -- | Tries to predict user behavior and gets
@@ -82,9 +81,9 @@ getAIChoise = randomRIO (0,1)
 
 -- | Gets player choise. Depending on player kind
 -- either prompt a user or generate a value.
-getPlayerChoise :: PlayerKind -> IO Int
-getPlayerChoise kind = case kind of
-  PL -> queryUser
+getPlayerChoise :: PlayerName -> PlayerKind -> IO Int
+getPlayerChoise n kind = case kind of
+  PL -> queryUser n
   AI -> getAIChoise
 
 -- | Converts 'GameState' to 'GameResult'.
@@ -103,8 +102,8 @@ toGameResult s =
 -- | Runs one round of the Mora game.
 oneRound :: Round
 oneRound = StateT $ \s -> do
-  p1v <- getPlayerChoise $ p1Kind s
-  p2v <- getPlayerChoise $ p2Kind s
+  p1v <- getPlayerChoise (p1Name s) (p1Kind s)
+  p2v <- getPlayerChoise (p2Name s) (p2Kind s)
   let (p1p, p2p) = evalScorePoints p1v p2v (fe s)
       s' = s { p1Score = p1Score s + p1p
              , p2Score = p2Score s + p2p }
