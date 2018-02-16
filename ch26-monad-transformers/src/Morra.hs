@@ -2,6 +2,7 @@
 
 module Morra where
 
+import Data.Bits ( xor )
 import Data.Bool ( bool )
 import Control.Monad.Trans.Class
 import Data.Text.Lazy
@@ -20,25 +21,30 @@ data GameKind = PvP | PvE | EvE deriving (Show, Eq)
 -- | Human or IO.
 data PlayerKind = PL | AI deriving (Show)
 
+-- | Wheter player1 or player2 are even.
+data Even = Player1 | Player2 deriving (Show, Eq)
+
 -- | The player name.
 newtype PlayerName = PlayerName Text
   deriving (Show)
 
 -- | The game configuration.
 data GameConfig =
-  GameConfig { bestOf :: Int
-             , gameKind :: GameKind
-             , p1N :: PlayerName
-             , p2N :: PlayerName }
+  GameConfig { bestOf     :: Int
+             , gameKind   :: GameKind
+             , p1N        :: PlayerName
+             , p2N        :: PlayerName
+             , firstEven  :: Bool }
 
 -- | The game state.
 data GameState =
   GameState { p1Score :: Int
             , p2Score :: Int
-            , p1Kind :: PlayerKind
-            , p2Kind :: PlayerKind
-            , p1Name :: PlayerName
-            , p2Name :: PlayerName }
+            , p1Kind  :: PlayerKind
+            , p2Kind  :: PlayerKind
+            , p1Name  :: PlayerName
+            , p2Name  :: PlayerName
+            , fe      :: Bool }
 
 -- | The game result.
 data GameResult =
@@ -52,8 +58,15 @@ type Game  = ReaderT GameConfig (StateT GameState IO) GameResult
 
 ----------------------------------------------------------------------
 
-evalScorePoints :: Int -> Int -> (Int, Int)
-evalScorePoints _ _ = (1, 0)
+-- | Evaluates score poins for the players, depending
+-- on which player is even or odd.
+evalScorePoints :: Int -> Int -> Bool -> (Int, Int)
+evalScorePoints a b p =
+  let c = a + b
+      e = even c
+      r = e `xor` p
+  in (bti $ not r, bti r)
+  where bti = bool 0 1
 
 getPlayerChoise :: PlayerKind -> IO Int
 getPlayerChoise _ = return 1
@@ -76,7 +89,7 @@ oneRound :: Round
 oneRound = StateT $ \s -> do
   p1v <- getPlayerChoise $ p1Kind s
   p2v <- getPlayerChoise $ p2Kind s
-  let (p1p, p2p) = evalScorePoints p1v p2v
+  let (p1p, p2p) = evalScorePoints p1v p2v (fe s)
       s' = s { p1Score = p1Score s + p1p
              , p2Score = p2Score s + p2p }
   return (toGameResult s', s')
@@ -103,9 +116,10 @@ runGame conf game =
       , p1Kind  = bool PL AI (gameKind conf == EvE)
       , p2Kind  = bool AI PL (gameKind conf == PvP)
       , p1Name  = p1N conf
-      , p2Name  = p2N conf }
+      , p2Name  = p2N conf
+      , fe      = firstEven conf }
 
 main = do
-  let conf  = GameConfig 3 PvE (PlayerName "John") (PlayerName "AI")
+  let conf  = GameConfig 3 PvE (PlayerName "John") (PlayerName "AI") True
   gameResult <- runGame conf theGame
   print gameResult
