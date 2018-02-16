@@ -2,6 +2,7 @@
 
 module Morra where
 
+import Data.Bool ( bool )
 import Control.Monad.Trans.Class
 import Data.Text.Lazy
 import Control.Monad.Trans.State
@@ -10,25 +11,25 @@ import Control.Monad.Loops ( iterateWhile )
 
 ----------------------------------------------------------------------
 
--- | There are there possible game types:
+-- | The possible game types:
 --   * Player vs Player
 --   * Player vs AI
 --   * AI vs AI
-data GameKind = PvP | PvE | EvE deriving (Show)
+data GameKind = PvP | PvE | EvE deriving (Show, Eq)
 
--- | A player could be an actula human or AI.
+-- | Human or IO.
 data PlayerKind = PL | AI deriving (Show)
 
 -- | The player name.
-newtype Player = Player Text
+newtype PlayerName = PlayerName Text
   deriving (Show)
 
 -- | The game configuration.
 data GameConfig =
   GameConfig { bestOf :: Int
              , gameKind :: GameKind
-             , p1N :: Player
-             , p2N :: Player }
+             , p1N :: PlayerName
+             , p2N :: PlayerName }
 
 -- | The game state.
 data GameState =
@@ -36,14 +37,14 @@ data GameState =
             , p2Score :: Int
             , p1Kind :: PlayerKind
             , p2Kind :: PlayerKind
-            , p1Name :: Player
-            , p2Name :: Player }
+            , p1Name :: PlayerName
+            , p2Name :: PlayerName }
 
 -- | The game result.
 data GameResult =
   GameResult { p1S :: Int
              , p2S :: Int
-             , won :: Maybe Player }
+             , won :: Maybe PlayerName }
   deriving ( Show )
 
 type Round = StateT GameState IO GameResult
@@ -57,6 +58,7 @@ evalScorePoints _ _ = (1, 0)
 getPlayerChoise :: PlayerKind -> IO Int
 getPlayerChoise _ = return 1
 
+-- | Converts 'GameState' to 'GameResult'.
 toGameResult :: GameState -> GameResult
 toGameResult s =
   GameResult { p1S = p1Score s
@@ -69,6 +71,7 @@ toGameResult s =
       LT -> Just $ p2Name s
       GT -> Just $ p1Name s
 
+-- | Runs one round of the Mora game.
 oneRound :: Round
 oneRound = StateT $ \s -> do
   p1v <- getPlayerChoise $ p1Kind s
@@ -78,7 +81,7 @@ oneRound = StateT $ \s -> do
              , p2Score = p2Score s + p2p }
   return (toGameResult s', s')
 
--- | Play the Morra.
+-- | Creates the Morra game.
 theGame :: Game
 theGame = ReaderT $ \conf ->
   iterateWhile (isRunning conf) oneRound
@@ -89,13 +92,20 @@ theGame = ReaderT $ \conf ->
 
 ----------------------------------------------------------------------
 
+-- | Runs the game based on the provided config.
 runGame :: GameConfig -> Game -> IO GameResult
 runGame conf game =
   fst <$> runStateT (runReaderT game conf) initialState
   where
-    initialState = GameState 0 0 PL AI (p1N conf) (p2N conf)
+    initialState = GameState
+      { p1Score = 0
+      , p2Score = 0
+      , p1Kind  = bool PL AI (gameKind conf == EvE)
+      , p2Kind  = bool AI PL (gameKind conf == PvP)
+      , p1Name  = p1N conf
+      , p2Name  = p2N conf }
 
 main = do
-  let conf  = GameConfig 3 PvE (Player "John") (Player "AI")
+  let conf  = GameConfig 3 PvE (PlayerName "John") (PlayerName "AI")
   gameResult <- runGame conf theGame
   print gameResult
