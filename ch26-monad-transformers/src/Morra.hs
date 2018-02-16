@@ -73,11 +73,19 @@ queryUser n = do
   putStr $ concat [ "Your choise, "
                   , unpack $ getPlayerName n
                   , ": " ]
-  Ex.catch readLn handler
-  where handler :: Ex.IOException -> IO Int
-        handler _ = do
-          putStrLn "Cannot parse the input."
-          queryUser n
+  Ex.catch reader handler
+  where
+    handler :: Ex.IOException -> IO Int
+    handler _ = do
+      putStrLn "Failed to parse the input. Please input '1' or '2'."
+      queryUser n
+
+    reader = do
+      v <- readLn
+      if v == 1 || v == 2
+        then return v
+        else fail "out of range"
+
 
 -- | Tries to predict user behavior and gets
 -- the possible winning value.
