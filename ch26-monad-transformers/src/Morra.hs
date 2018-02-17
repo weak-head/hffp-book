@@ -10,6 +10,7 @@ import           Control.Monad.Trans.Reader
 import           Control.Monad.Trans.State
 import           Data.Bits ( xor )
 import           Data.Bool ( bool )
+import           Data.Maybe ( fromJust )
 import           Data.Text.Lazy hiding (concat)
 import           System.Random ( randomRIO, randomIO )
 
@@ -181,7 +182,12 @@ buildGameConfig = do
 
 -- | Outputs the final game result.
 printGameResult :: GameResult -> IO ()
-printGameResult = print
+printGameResult gr =
+  putStrLn $ concat [ "------> "
+                    , unpack . getPlayerName . fromJust . won $ gr
+                    , " has won the game! Final score: "
+                    , show $ p1S gr, "-", show $ p2S gr
+                    , " <------" ]
 
 main :: IO ()
 main =
