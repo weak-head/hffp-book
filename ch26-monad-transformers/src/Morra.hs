@@ -20,7 +20,7 @@ import           System.Random ( randomRIO, randomIO )
 --   * Player vs Player
 --   * Player vs AI
 --   * AI vs AI
-data GameKind = PvP | PvE | EvE deriving (Show, Eq)
+data GameType = PvP | PvE | EvE deriving (Show, Eq)
 
 -- | Human or IO.
 data PlayerKind = PL | AI deriving (Show)
@@ -32,7 +32,7 @@ newtype PlayerName = PlayerName { getPlayerName :: Text }
 -- | The game configuration.
 data GameConfig =
   GameConfig { bestOf     :: Int
-             , gameKind   :: GameKind
+             , gameKind   :: GameType
              , p1N        :: PlayerName
              , p2N        :: PlayerName
              , firstEven  :: Bool }
@@ -170,12 +170,42 @@ runGame game conf = do
       , p2Name  = p2N conf
       , fe      = firstEven conf }
 
+----------------------------------------------------------------------
+
+-- | Query user for the game kind.
+selectGameType :: IO GameType
+selectGameType = do
+  putStrLn "Select the game type:"
+  putStrLn "  1 - Player vs Player"
+  putStrLn "  2 - Player vs AI"
+  putStrLn "  3 - AI vs AI"
+  Ex.handle handler reader
+  where
+
+    reader = do
+      putStr "Your choice: "
+      v <- readLn
+      if v < 1 && v > 3
+        then fail "out of range"
+        else return $ toGameType v
+
+    handler :: Ex.IOException -> IO GameType
+    handler _ = do
+      putStrLn "Failed to parse the input. Please input '1', '2' or '3'."
+      selectGameType
+
+    toGameType 1 = PvP
+    toGameType 2 = PvE
+    toGameType 3 = EvE
+
+
 -- | Constructs the game configuration.
 buildGameConfig :: IO GameConfig
 buildGameConfig = do
   fstEv <- randomIO
+  gt    <- selectGameType
   return GameConfig  { bestOf    = 3
-                     , gameKind  = PvE
+                     , gameKind  = gt
                      , p1N       = PlayerName "John"
                      , p2N       = PlayerName "AI"
                      , firstEven = fstEv }
