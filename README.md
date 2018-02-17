@@ -4,7 +4,7 @@ This repository contains source code, exercises, related topics and some additio
 
 ## Places worth to check
 
-There is a lot of random unstructured stuff here. Probably, the most interesting for you would be the following:
+There is a lot of random unstructured stuff here, but there are a few good places to check:
 
 The base library definitions and implementations:
 * [Monoid, Functor, Applicative, Monad, Foldable and Traversable class definitions](ch21-traversable/src/Sand/ClassDef.hs) 
@@ -30,3 +30,4 @@ Monad transformers:
 * [MaybeT, ExceptT, ReaderT, StateT instances](ch26-monad-transformers/src/sand/Inst.hs)
 * [Scotty ActionT breakdown](ch26-monad-transformers/src/Scotty.hs)
 * [HitCounter (scotty, ReaderT, IORef)](ch26-monad-transformers/src/HitCounter.hs)
+* [Morra game](ch26-monad-transformers/src/Morra.hs)
