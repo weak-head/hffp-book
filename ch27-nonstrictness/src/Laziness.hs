@@ -46,3 +46,16 @@ possibleKaboom' b =
     False -> snd tup
   where tup = (0, undefined)
 
+----------------------------------------
+
+ofoldr k z xs = go xs
+  where
+    go [] = z
+    go (y:ys) = y `k` go ys
+
+c = foldr const 'z' ['a'..'e']  -- 'a'
+
+-- c = const 'z' "abcde" = go "abcde"
+--  where
+--    go [] = 'z'
+--    go ('a':"bcde") = 'a' `const` go "bcde"
