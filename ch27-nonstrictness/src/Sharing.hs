@@ -169,3 +169,19 @@ fg v = trace "f" const 1 v
 -- :sprint fm
 -- fm = _
 
+----------------------------------------
+
+-- > :set -XImplicitParams
+-- > import Debug.Trace
+-- > :{
+-- > let add :: (?x :: Int) => Int
+-- >     add = trace "add" 1 + ?x
+-- > }:
+--
+-- > let ?x = 1 in add
+-- add
+-- 2
+--
+-- > let ?x = 1 in add
+-- add
+-- 2
