@@ -261,3 +261,50 @@ concrete :: Int
 concrete = 1
 -- concrete
 -- concrete = I# 1
+
+
+----------------------------------------
+--- Prevent sharing on purpose ---------
+----------------------------------------
+
+-- > import Debug.Trace
+-- > let f x = x + x
+-- > f (trace "hi" 2)
+-- hi
+-- 4
+
+
+-- > let f x = (x ()) + (x ())
+-- > f (\_ -> trace "hi" 2)
+-- hi
+-- hi
+-- 4
+--
+--
+-- > let g = \_ -> trace "hi" 2
+-- > f g
+-- hi
+-- hi
+-- 4
+--
+--
+-- > let h = const (trace "hi" 2)
+-- > f h
+-- hi
+-- 4
+
+-- functions aren't shared when there are named
+-- arguments but are when the arguments are elided,
+-- as in pointfree
+
+----------------------------------------
+--- Force sharing ----------------------
+----------------------------------------
+
+fsh = let x = 1 + 1  -- force sharing by giving a name
+      in x * x
+
+-- having sharing allows us to avoid memory leak
+forever' :: (Monad m) => m a -> m b
+forever' a = let a' = a >> a'
+             in a'
