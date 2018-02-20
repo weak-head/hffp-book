@@ -2,7 +2,6 @@ module Sharing where
 
 import Debug.Trace
 
-
 ----------------------------------------
 a :: Integer
 a = trace "a" 1
@@ -176,7 +175,7 @@ fg v = trace "f" const 1 v
 -- > :{
 -- > let add :: (?x :: Int) => Int
 -- >     add = trace "add" 1 + ?x
--- > }:
+-- > :}
 --
 -- > let ?x = 1 in add
 -- add
@@ -185,3 +184,80 @@ fg v = trace "f" const 1 v
 -- > let ?x = 1 in add
 -- add
 -- 2
+
+----------------------------------------
+----------------------------------------
+
+-- > :{
+-- > let blah = Just (trace "eval'd 1" 1)
+-- > :}
+--
+-- > :sprint blah
+-- blah = _
+--
+-- > :t blah
+-- blah :: Num a => Maybe a
+--
+-- > fmap (+1) blah
+-- Just eval'd 1
+-- 2
+--
+-- > fmap (+1) blah
+-- Just eval'd 1
+-- 2
+--
+-- > :sprint blah
+-- blah = _
+
+
+-- > :{
+-- > let blah =
+-- >       Just (trace "eval'd 1" (1 :: Int)) --no typeclass constraint
+-- > :}
+--
+-- > :sprint blah
+-- blah = Just _
+--
+-- > fmap (+1) blah
+-- Just eval'd 1
+-- 2
+--
+-- > fmap (+1) blah
+-- Just 2
+
+----------------------------------------
+
+-- > let poly = 1
+-- > let conc = poly :: Int
+--
+-- > :sprint poly
+-- poly = _
+-- > :sprint conc
+-- conc = _
+--
+-- > poly
+-- 1
+-- > conc
+-- 1
+--
+-- > :sprint poly
+-- poly = _
+-- > :sprint conc
+-- conc = 1
+
+
+-----
+-- polymorphic expressions cant be shared...
+-----
+
+polymorphic :: Num a => a
+polymorphic = 1
+-- polymorphic
+-- polymorphic =
+--             \ @ a1_aRN $dNum_aRP ->
+--               fromInteger $dNum_aRP (__integer 1)
+
+concrete :: Int
+concrete = 1
+-- concrete
+-- concrete = I# 1
