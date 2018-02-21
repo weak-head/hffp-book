@@ -42,7 +42,10 @@ myList = [1..9999]
 -- ./src/Main
 main :: IO ()
 main = defaultMain
-  [ bench "index list !!  9999" $ whnf (myList !!)  9998
+  [ bench "map list whnf 9999" $ whnf (map (+1)) myList -- guarded recursion
+  , bench "map list nf 9999" $ nf (map (+1)) myList
+  --
+  , bench "index list !!  9999" $ whnf (myList !!)  9998
   , bench "index list !?  9999" $ whnf (myList !?)  9998
   , bench "index list !?? 9999" $ whnf (myList !??) 9998
   --
@@ -51,6 +54,9 @@ main = defaultMain
   --
   , bench "index whnf mlist !! 9999" $ whnf (myList' !!) 9999 -- undefined
   , bench "index nf mlist !! 9999"   $ nf   (myList' !!) 9999 -- undefined
+  --
+  --
+  --
   ]
 
 -- > (Just undefined) `seq` 1
