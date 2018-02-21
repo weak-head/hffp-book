@@ -5,6 +5,7 @@ module Main where
 -- > ghc -O2 bench.hs
 
 import Criterion.Main
+import Debug.Trace
 
 ----------------------------------------
 
@@ -31,6 +32,9 @@ xs !?? n
 
 ----------------------------------------
 
+myList' :: [Int]
+myList' = trace "myList' was evaluated" ([1..9999] ++ [undefined])
+
 myList :: [Int]
 myList = [1..9999]
 
@@ -41,4 +45,22 @@ main = defaultMain
   [ bench "index list !!  9999" $ whnf (myList !!)  9998
   , bench "index list !?  9999" $ whnf (myList !?)  9998
   , bench "index list !?? 9999" $ whnf (myList !??) 9998
+  --
+  --
+  , bench "index nf mlist !! 9999" $ nf (myList' !!) 9998 -- ok
+  --
+  , bench "index whnf mlist !! 9999" $ whnf (myList' !!) 9999 -- undefined
+  , bench "index nf mlist !! 9999"   $ nf   (myList' !!) 9999 -- undefined
   ]
+
+-- > (Just undefined) `seq` 1
+-- 1
+--
+-- > (\_ -> undefined) `seq` 1
+-- 1
+--
+-- > ((\_ -> Just undefined) 0) `seq` 1
+-- 1
+--
+-- > ((\_ -> undefined) 0) `seq` 1
+-- exception
