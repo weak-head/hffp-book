@@ -37,3 +37,28 @@ module ChEx where
 -- 1
 -- > :sprint x
 -- x = 1
+
+----------------------------------------
+
+ex1 = snd (undefined, 1)
+-- 1
+
+ex2 = let x = undefined
+          y = x `seq` 1
+      in snd (x, y)
+-- exception
+
+ex3 = length $ [1..5] ++ undefined
+-- exception
+
+ex4 = length $ [1..5] ++ [undefined]
+-- 6
+
+ex5 = const 1 undefined
+-- 1
+
+ex6 = const 1 (undefined `seq` 1)
+-- 1
+
+ex7 = const undefined 1
+-- exception
