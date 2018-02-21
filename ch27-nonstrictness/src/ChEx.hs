@@ -62,3 +62,11 @@ ex6 = const 1 (undefined `seq` 1)
 
 ex7 = const undefined 1
 -- exception
+
+----------------------------------------
+
+x = undefined
+y = x `seq` "blah"
+
+main = do
+  print (snd (x, y))
