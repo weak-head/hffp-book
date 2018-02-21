@@ -9,6 +9,8 @@ import Criterion.Main
 ----------------------------------------
 
 infixl 9 !?
+-- Defaults to Integer, the Int optimization is what makes the difference.
+-- (!?) :: [a] -> Int -> Maybe a
 _      !? n | n < 0 = Nothing
 []     !? _         = Nothing
 (x:_)  !? 0         = Just x
@@ -18,6 +20,7 @@ _      !? n | n < 0 = Nothing
 
 infixl 9 !??
 {-# INLINABLE (!??) #-}
+-- (!??) :: [a] -> Int -> Maybe a
 xs !?? n
   | n < 0     = Nothing
   | otherwise =
