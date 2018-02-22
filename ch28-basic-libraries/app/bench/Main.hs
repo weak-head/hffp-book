@@ -38,8 +38,8 @@ myList' = trace "myList' was evaluated" ([1..9999] ++ [undefined])
 myList :: [Int]
 myList = [1..9999]
 
--- stack ghc -- -O2 ./src/Main.hs
--- ./src/Main
+-- stack ghc -- -O2 ./app/bench/Main.hs
+-- ./app/bench/Main
 main :: IO ()
 main = defaultMain
   [ bench "map list whnf 9999" $ whnf (map (+1)) myList -- guarded recursion

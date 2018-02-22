@@ -4,10 +4,10 @@ build-type:          Simple
 cabal-version:       >=1.10
 
 
-executable bl
+executable bl-benchmark
   main-is:             Main.hs
   build-depends:       base >=4.8 && <5.0
-  hs-source-dirs:      src
+  hs-source-dirs:      app/bench
   default-language:    Haskell2010
   build-depends:       basic-libraries
                      , transformers
