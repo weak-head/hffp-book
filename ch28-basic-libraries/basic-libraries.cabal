@@ -13,6 +13,17 @@ executable bl-benchmark
                      , transformers
                      , criterion
 
+
+executable bl-profiling
+  main-is:             Main.hs
+  build-depends:       base >=4.8 && <5.0
+  hs-source-dirs:      app/profiling
+  default-language:    Haskell2010
+  build-depends:       basic-libraries
+                     , transformers
+                     , criterion
+
+
 library
   build-depends:       base >=4.8 && <5.0
   hs-source-dirs:      src
