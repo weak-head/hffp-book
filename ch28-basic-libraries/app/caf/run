@@ -1,0 +1,10 @@
+#!/bin/sh
+
+stack clean
+stack ghc -- -prof -fprof-auto -rtsopts -O2 Main.hs
+
+./Main +RTS -hc -p
+
+hp2ps Main.hp
+cat Main.ps
+
