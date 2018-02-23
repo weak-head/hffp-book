@@ -28,5 +28,16 @@ s = S.fromList $ take 10000 stream
   where
     stream = iterate (+1) 0
 
+membersMap :: Int -> Bool
+membersMap i = M.member i m
+
+membersSet :: Int -> Bool
+membersSet i = S.member i s
+
 main :: IO ()
-main = print ""
+main = defaultMain
+  [ bench "member check map" $
+    whnf membersMap 9999
+  , bench "member check set" $
+    whnf membersSet 9999
+  ]
