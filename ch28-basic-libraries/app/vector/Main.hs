@@ -84,6 +84,10 @@ mutableUpdateST n = runST $ do
 
 ----------------------------------------
 
+--
+-- > stack build --profile
+-- > stack exec -- bl-vector +RTS -hc -p
+--
 main :: IO ()
 main = defaultMain
   [
