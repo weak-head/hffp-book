@@ -4,6 +4,20 @@ import Criterion.Main
 
 ----------------------------------------
 
+newtype QueuePlain a =
+  QueuePlain { queuePlain :: [a] }
+  deriving (Show, Eq)
+
+pushPlain :: a -> QueuePlain a -> QueuePlain a
+pushPlain x xs = QueuePlain $ x : queuePlain xs
+
+popPlain :: QueuePlain a -> Maybe (a, QueuePlain a)
+popPlain q = case queuePlain q of
+  [] -> Nothing
+  xs -> Just (last xs, QueuePlain $ init xs)
+
+----------------------------------------
+
 data Queue a =
   Queue { enqueue :: [a]
         , dequeue :: [a]
@@ -25,8 +39,18 @@ pop (Queue en de) =
 
 ----------------------------------------
 
-sequantialQueue1 :: Int -> Queue Int
-sequantialQueue1 n =
+sequantialQueuePlain :: Int -> QueuePlain Int
+sequantialQueuePlain n =
+  let que = QueuePlain [] 
+      lng = foldr pushPlain que [1..n]
+  in unwrap lng
+  where
+    unwrap q = case popPlain q of
+      Just (_, nq) -> unwrap nq
+      Nothing      -> QueuePlain []
+      
+sequantialQueueV1 :: Int -> Queue Int
+sequantialQueueV1 n =
   let que = Queue [] []
       lng = foldr push que [1..n]
   in unwrap lng
@@ -35,8 +59,12 @@ sequantialQueue1 n =
       Just (_, nq) -> unwrap nq
       Nothing      -> Queue [] []
 
+----------------------------------------      
+
 -- > stack build --ghc-options -O2
 -- > stack exec bl-queue -- --output bench.html
 runBench :: IO ()
 runBench  = defaultMain
-  [ bench "Queue#1 sequential test" $ whnf sequantialQueue1 9999 ]
+  [ bench "QueuePlain sequential test" $ whnf sequantialQueuePlain 9999
+  , bench "QueueV1    sequential test" $ whnf sequantialQueueV1 9999
+  ]
