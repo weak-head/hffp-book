@@ -39,16 +39,32 @@ pop (Queue en de) =
 
 ----------------------------------------
 
+push' :: a -> Queue a -> Queue a
+push' a (Queue en de) =
+  Queue { enqueue = a : en
+        , dequeue = de }
+
+pop' :: Queue a -> Maybe (a, Queue a)
+pop' (Queue en de) =
+  case de of
+    []     -> maybePop en
+    (x:xs) -> Just (x, Queue en xs)
+  where
+    maybePop [] = Nothing
+    maybePop xs = pop' $ Queue [] $ reverse xs
+
+----------------------------------------
+
 sequantialQueuePlain :: Int -> QueuePlain Int
 sequantialQueuePlain n =
-  let que = QueuePlain [] 
+  let que = QueuePlain []
       lng = foldr pushPlain que [1..n]
   in unwrap lng
   where
     unwrap q = case popPlain q of
       Just (_, nq) -> unwrap nq
       Nothing      -> QueuePlain []
-      
+
 sequantialQueueV1 :: Int -> Queue Int
 sequantialQueueV1 n =
   let que = Queue [] []
@@ -59,7 +75,17 @@ sequantialQueueV1 n =
       Just (_, nq) -> unwrap nq
       Nothing      -> Queue [] []
 
-----------------------------------------      
+sequantialQueueV2 :: Int -> Queue Int
+sequantialQueueV2 n =
+  let que = Queue [] []
+      lng = foldr push' que [1..n]
+  in unwrap lng
+  where
+    unwrap q = case pop' q of
+      Just (_, nq) -> unwrap nq
+      Nothing      -> Queue [] []
+
+----------------------------------------
 
 -- > stack build --ghc-options -O2
 -- > stack exec bl-queue -- --output bench.html
@@ -67,4 +93,5 @@ runBench :: IO ()
 runBench  = defaultMain
   [ bench "QueuePlain sequential test" $ whnf sequantialQueuePlain 9999
   , bench "QueueV1    sequential test" $ whnf sequantialQueueV1 9999
+  , bench "QueueV2    sequential test" $ whnf sequantialQueueV2 9999
   ]
