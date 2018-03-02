@@ -68,8 +68,13 @@ main = do
   catch throwEx baseHandler
   putStrLn ""
   --
-  putStrLn "Catching exception with [All -> base first]"
+  putStrLn "Catching exception with [Some handler]"
+  catch throwEx someHandler
+  putStrLn ""
+  --
+  putStrLn "Catching exception with [All -> some first]"
   catches throwEx [ Handler ioHandler
+                  , Handler someHandler
                   , Handler baseHandler
                   , Handler specificHandler
                   , Handler concreteHandler ]
@@ -80,6 +85,7 @@ main = do
                   , Handler concreteHandler
                   , Handler specificHandler
                   , Handler baseHandler
+                  , Handler someHandler
                   ]
   putStrLn ""
   --
@@ -97,6 +103,9 @@ main = do
     baseHandler :: SomeBaseException -> IO ()
     baseHandler e = putStrLn $ "> Caught (base): " ++ show e
     --
+    someHandler :: SomeException -> IO ()
+    someHandler e = putStrLn $ "> Caught (some): " ++ show e
+    --
     ioHandler :: IOException -> IO ()
     ioHandler e = putStrLn $ "> Caught (io): " ++ show e
 
@@ -111,8 +120,11 @@ Catching exception with [Specific handler]
 Catching exception with [Base handler]
 > Caught (base): ConcreteException
 
-Catching exception with [All -> base first]
-> Caught (base): ConcreteException
+Catching exception with [Some handler]
+> Caught (some): ConcreteException
+
+Catching exception with [All -> some first]
+> Caught (some): ConcreteException
 
 Catching exception with [All -> concrete first]
 > Caught (concr): ConcreteException
