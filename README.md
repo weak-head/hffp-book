@@ -31,3 +31,6 @@ Monad transformers:
 * [Scotty ActionT breakdown](ch26-monad-transformers/src/Scotty.hs)
 * [HitCounter (scotty, ReaderT, IORef)](ch26-monad-transformers/src/HitCounter.hs)
 * [Morra game](ch26-monad-transformers/src/Morra.hs)
+
+Exceptions:
+* [Exception hierarchy](ch30-when-things-go-wrong/src/Hierarchy.hs)
