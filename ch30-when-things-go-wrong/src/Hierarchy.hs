@@ -68,20 +68,56 @@ main = do
   catch throwEx baseHandler
   putStrLn ""
   --
+  putStrLn "Catching exception with [All -> base first]"
+  catches throwEx [ Handler ioHandler
+                  , Handler baseHandler
+                  , Handler specificHandler
+                  , Handler concreteHandler ]
+  putStrLn ""
+  --
+  putStrLn "Catching exception with [All -> concrete first]"
+  catches throwEx [ Handler ioHandler
+                  , Handler concreteHandler
+                  , Handler specificHandler
+                  , Handler baseHandler
+                  ]
+  putStrLn ""
+  --
   putStrLn "Catching exception with [IO handler]"
   catch throwEx ioHandler
   putStrLn ""
 
   where
     concreteHandler :: ConcreteException -> IO ()
-    concreteHandler e = putStrLn $ "> Caught: " ++ show e
+    concreteHandler e = putStrLn $ "> Caught (concr): " ++ show e
     --
     specificHandler :: SomeSpecificException -> IO ()
-    specificHandler e = putStrLn $ "> Caught: " ++ show e
+    specificHandler e = putStrLn $ "> Caught (specific): " ++ show e
     --
     baseHandler :: SomeBaseException -> IO ()
-    baseHandler e = putStrLn $ "> Caught: " ++ show e
+    baseHandler e = putStrLn $ "> Caught (base): " ++ show e
     --
     ioHandler :: IOException -> IO ()
-    ioHandler e = putStrLn $ "> Caught: " ++ show e
+    ioHandler e = putStrLn $ "> Caught (io): " ++ show e
 
+{-
+
+Catching exception with [Concrete handler]
+> Caught (concr): ConcreteException
+
+Catching exception with [Specific handler]
+> Caught (specific): ConcreteException
+
+Catching exception with [Base handler]
+> Caught (base): ConcreteException
+
+Catching exception with [All -> base first]
+> Caught (base): ConcreteException
+
+Catching exception with [All -> concrete first]
+> Caught (concr): ConcreteException
+
+Catching exception with [IO handler]
+*** Exception: ConcreteException
+
+-}
