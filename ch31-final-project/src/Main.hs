@@ -1,3 +1,4 @@
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE RecordWildCards #-}
@@ -75,6 +76,37 @@ WHERE username = ?
 |]
 
 ----------------------------------------
+
+data DatabaseException =
+  forall e . Exception e => DatabaseException e
+
+instance Show DatabaseException where
+  show (DatabaseException e) = show e
+
+instance Exception DatabaseException
+
+dbExceptionToException :: Exception e => e -> SomeException
+dbExceptionToException = toException . DatabaseException
+
+dbExceptionFromException :: Exception e => SomeException -> Maybe e
+dbExceptionFromException x = do
+  DatabaseException e <- fromException x
+  cast e
+
+----
+
+data DuplicateData =
+  DuplicateData
+  deriving (Eq, Show, Typeable)
+
+instance Exception DuplicateData where
+  toException = dbExceptionToException
+  fromException = dbExceptionFromException
+
+----------------------------------------
+
+type UserRow =
+  (Null, Text, Text, Text, Text, Text)
 
 main :: IO ()
 main = do
