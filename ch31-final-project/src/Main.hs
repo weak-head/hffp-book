@@ -6,7 +6,7 @@
 module Main where
 
 import           Control.Exception
-import           Control.Monad (forever)
+import           Control.Monad (forever, void)
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import           Data.List (intersperse)
@@ -18,6 +18,7 @@ import qualified Database.SQLite.Simple as SQLite
 import           Database.SQLite.Simple hiding (close)
 import           Database.SQLite.Simple.Types
 import           Network.Socket hiding (close, recv)
+import qualified Network.Socket as NS
 import           Network.Socket.ByteString (recv, sendAll)
 import           Text.RawString.QQ
 
@@ -134,7 +135,64 @@ createDatabase = do
                   , "S User"
                   , "123-456-7890")
 
+----------------------------------------
+
+returnUsers :: Connection
+            -> Socket
+            -> IO ()
+returnUsers dbConn soc = do
+  rows <- query_ dbConn allUsers
+  let usernames = map username rows
+      newlineSep = T.concat $ intersperse "\n" usernames
+  sendAll soc (encodeUtf8 newlineSep)
+
+formatUser :: User -> ByteString
+formatUser (User _ username shell homeDir realName _) =
+  BS.concat [ "Login: ",     e username, "\t\t\t\t"
+            , "Name: ",      e realName, "\n"
+            , "Directory: ", e homeDir,  "\t\t\t"
+            , "Shell: ",     e shell,    "\n" ]
+  where e = encodeUtf8
+
+returnUser :: Connection
+           -> Socket
+           -> Text
+           -> IO ()
+returnUser con sock uname = do
+  mUser <- getUser con (T.strip uname)
+  case mUser of
+    Nothing   -> void $ putStrLn $ "Coudn't find matching user for username: " ++ show uname
+    Just user -> sendAll sock (formatUser user)
+
+handleQuery :: Connection
+            -> Socket
+            -> IO ()
+handleQuery con soc = do
+  msg <- recv soc 1024
+  case msg of
+    "\r\n" -> returnUsers con soc
+    name   -> returnUser con soc (decodeUtf8 name)
+
+handleQueries :: Connection
+              -> Socket
+              -> IO ()
+handleQueries con sock = forever $ do
+  (soc, _) <- accept sock
+  putStrLn "Got connection, handling query"
+  handleQuery con soc
+  NS.close soc
 
 main :: IO ()
-main = do
-  createDatabase
+main = withSocketsDo $ do
+  addrinfos <- getAddrInfo (Just (defaultHints { addrFlags = [AI_PASSIVE] }))
+                           Nothing
+                           (Just "79")
+  let serveraddr = head addrinfos
+  sock <- socket (addrFamily serveraddr)
+                 Stream defaultProtocol
+  NS.bind sock (addrAddress serveraddr)
+  listen sock 1
+  conn <- open "f.db"
+  handleQueries conn sock
+  SQLite.close conn
+  NS.close sock
