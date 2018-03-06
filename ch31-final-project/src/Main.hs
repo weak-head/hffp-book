@@ -108,6 +108,33 @@ instance Exception DuplicateData where
 type UserRow =
   (Null, Text, Text, Text, Text, Text)
 
+getUser :: Connection
+        -> Text
+        -> IO (Maybe User)
+getUser conn username = do
+  results <- query conn getUserQuery (Only username)
+  case results of
+    []     -> return Nothing
+    [user] -> return $ Just user
+    _      -> throwIO DuplicateData
+
+createDatabase :: IO ()
+createDatabase = do
+  conn <- open "f.db"
+  execute_ conn createUsers
+  execute conn insertUser userRow
+  rows <- query_ conn allUsers
+  mapM_ print (rows :: [User])
+  SQLite.close conn
+  where userRow :: UserRow
+        userRow = ( Null
+                  , "suser"
+                  , "/bin/bash"
+                  , "/home/suser"
+                  , "S User"
+                  , "123-456-7890")
+
+
 main :: IO ()
 main = do
-  putStrLn "hello world"
+  createDatabase
