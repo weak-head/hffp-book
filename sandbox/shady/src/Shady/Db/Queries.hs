@@ -2,22 +2,27 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 module Shady.Db.Queries
-  ( initDb
+  ( createUsers
+  , createMessages
   )
 where
 
 import Database.SQLite.Simple ( Query )
 import Text.RawString.QQ
 
--- | Creates the initial database structure.
-initDb :: Query
-initDb = [r|
+-- | Creates user table.
+createUsers :: Query
+createUsers = [r|
 CREATE TABLE IF NOT EXISTS users
  ( id INTEGER PRIMARY KEY AUTOINCREMENT
  , login TEXT
  , reg_date TEXT
  );
+|]
 
+-- | Creates messages table.
+createMessages :: Query
+createMessages = [r|
 CREATE TABLE IF NOT EXISTS messages
  ( id INTEGER PRIMARY KEY AUTOINCREMENT
  , sender INTEGER NOT NULL

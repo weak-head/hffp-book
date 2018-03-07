@@ -11,4 +11,6 @@ someFunc = "running"
 initDb :: IO ()
 initDb = do
   conn <- open "shady.db"
-  execute_ conn Q.initDb
+  withExclusiveTransaction conn $ do
+    execute_ conn Q.createUsers
+    execute_ conn Q.createMessages
