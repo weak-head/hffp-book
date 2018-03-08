@@ -8,14 +8,11 @@ where
 import           Control.Concurrent
 import           Control.Monad
 import           Control.Monad.IO.Class ( liftIO )
-import           Control.Monad.Trans.Class
-import           Control.Monad.Trans.Reader
---import           Control.Monad.Trans.RWS
-import           Control.Monad.Trans.State
-import qualified Control.Monad.Trans.Writer as TW
-import           Control.Monad.Trans.Error
+import qualified Control.Monad.Trans.Reader as TR
+import           Control.Monad.Trans.RWS
 import           Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import           Network.Socket
+import qualified Network.Socket as NS
 import qualified Network.Socket.ByteString as NBS
 
 ----------------------------------------
@@ -27,26 +24,26 @@ data ConnectionInfo =
                  , getSocket :: Socket }
   deriving (Eq, Show)
 
+-- | Represents the environment information:
+--   - db connection
+--   - arguments
+--   - etc
 data EnvInfo =
-  EnvInfo
+  EnvInfo { getDatabaseCon :: DbConnInfo }
   deriving (Eq, Show)
 
+-- | The state of the connected client.
 data ClientState =
-  ClientState
+  ClientState { getSock :: Socket
+              , getSockAddr :: SockAddr }
   deriving (Eq, Show)
 
-data ActionResult =
-  ActionResult
-  deriving (Eq, Show)
+type Handler = TR.ReaderT ConnectionInfo IO ()
+type ClientHandler a = RWST EnvInfo LogMessages ClientState IO a
 
-type Handler = ReaderT ConnectionInfo IO ()
-
-type NetworkError = String
 type LogMessages = [String] -- ListD
-type ClientHandler a = ReaderT ConnectionInfo (TW.WriterT LogMessages (StateT ClientState IO)) a
-
-type DbConnInfo = String
-type Port       = Int
+type DbConnInfo  = String
+type Port        = Int
 
 ----------------------------------------
 
@@ -56,22 +53,28 @@ startServer con port = do
   addr <- getAddress port
   sock <- socket (addrFamily addr) Stream defaultProtocol
   bind sock (addrAddress addr)
-  listen sock 5
-  runReaderT handleClients (ConnectionInfo con sock)
+  NS.listen sock 5
+  TR.runReaderT handleClients (ConnectionInfo con sock)
   close sock
 
 -- | Handle connections from clients.
 handleClients :: Handler
 handleClients = forever $ do
-  ci <- ask
-  (soc, _) <- liftIO $ accept (getSocket ci)
-  liftIO $ forkIO $ runReaderT handleClient (ci { getSocket = soc }) >> close soc
+  ci <- TR.ask
+  (soc, socadr) <- liftIO $ accept (getSocket ci)  
+  liftIO $ forkIO $ void $ evalRWST (handleClient >> closeConn)
+                                    (mkEnv ci)
+                                    (mkState soc socadr)
+  where
+    mkEnv (ConnectionInfo db _) = EnvInfo db
+    mkState s a = ClientState s a
+    closeConn = get >>= liftIO . close . getSock
 
--- | Handle single client.
---handleClient :: CmdLet
-handleClient = ReaderT $ \ci -> do
-  cmd <- NBS.recv (getSocket ci) 1024
-  print $ decodeUtf8 cmd
+handleClient :: ClientHandler ()
+handleClient = do
+  cs <- get
+  cmd <- liftIO $ NBS.recv (getSock cs) 1024
+  liftIO $ print $ decodeUtf8 cmd
 
 -- | Gets address to bind the socket.
 getAddress :: Port -> IO AddrInfo
