@@ -5,10 +5,15 @@ module Shady.Server
   )
 where
 
-import           Control.Monad.Trans.Class
-import           Control.Monad.Trans.Reader
 import           Control.Concurrent
 import           Control.Monad
+import           Control.Monad.IO.Class ( liftIO )
+import           Control.Monad.Trans.Class
+import           Control.Monad.Trans.Reader
+--import           Control.Monad.Trans.RWS
+import           Control.Monad.Trans.State
+import qualified Control.Monad.Trans.Writer as TW
+import           Control.Monad.Trans.Error
 import           Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import           Network.Socket
 import qualified Network.Socket.ByteString as NBS
@@ -18,11 +23,28 @@ import qualified Network.Socket.ByteString as NBS
 -- | Contains the information about the socket and
 -- database connection.
 data ConnectionInfo =
-  ConnectionInfo { dbInfo   :: DbConnInfo
-                 , sockInfo :: Socket }
+  ConnectionInfo { getDbInfo :: DbConnInfo
+                 , getSocket :: Socket }
   deriving (Eq, Show)
 
-type Handler    = ReaderT ConnectionInfo IO ()
+data EnvInfo =
+  EnvInfo
+  deriving (Eq, Show)
+
+data ClientState =
+  ClientState
+  deriving (Eq, Show)
+
+data ActionResult =
+  ActionResult
+  deriving (Eq, Show)
+
+type Handler = ReaderT ConnectionInfo IO ()
+
+type NetworkError = String
+type LogMessages = [String] -- ListD
+type ClientHandler a = ReaderT ConnectionInfo (TW.WriterT LogMessages (StateT ClientState IO)) a
+
 type DbConnInfo = String
 type Port       = Int
 
@@ -40,14 +62,15 @@ startServer con port = do
 
 -- | Handle connections from clients.
 handleClients :: Handler
-handleClients = ReaderT $ \ci -> forever $ do
-  (soc, _) <- accept (sockInfo ci)
-  forkIO $ runReaderT handleClient (ci { sockInfo = soc }) >> close soc
+handleClients = forever $ do
+  ci <- ask
+  (soc, _) <- liftIO $ accept (getSocket ci)
+  liftIO $ forkIO $ runReaderT handleClient (ci { getSocket = soc }) >> close soc
 
 -- | Handle single client.
-handleClient :: Handler
+--handleClient :: CmdLet
 handleClient = ReaderT $ \ci -> do
-  cmd <- NBS.recv (sockInfo ci) 1024
+  cmd <- NBS.recv (getSocket ci) 1024
   print $ decodeUtf8 cmd
 
 -- | Gets address to bind the socket.
