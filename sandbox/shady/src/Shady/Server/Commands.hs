@@ -14,12 +14,17 @@ import           Text.Trifecta
 
 -- | Defines all known and supported commands.
 data Command =
-    Register String
-  | Login String
+    Register UserName
+  | Login UserName
   | Logout
+  | Read From
+  | Send To Message
   deriving (Show, Eq)
 
-type UserName = String
+type From         = String
+type To           = String
+type Message      = String
+type UserName     = String
 type ParsingError = String
 
 -- | Parses the command string.
@@ -38,32 +43,55 @@ parseCommand' :: Parser Command
 parseCommand' =
   parseRegister <|>
   parseLogin <|>
-  parseLogout
+  parseLogout <|>
+  parseRead <|>
+  parseSend
 
 ----------------------------------------
 
 -- | Parses register command.
 parseRegister :: Parser Command
 parseRegister = do
-  string "register"
+  string "register" >> space
   userName <- parseUserName
-  eof
+  endCmd
   return $ Register userName
 
 -- | Parses login command.
 parseLogin :: Parser Command
 parseLogin = do
-  string "login"
+  string "login" >> space
   userName <- parseUserName
-  eof
+  endCmd
   return $ Login userName
 
 -- | Parses logout command.
 parseLogout :: Parser Command
 parseLogout =
   string "logout" >>
-  skipMany space >> eof >>
+  skipMany space >>
+  endCmd >>
   return Logout
+
+-- | Parses read command.
+parseRead :: Parser Command
+parseRead = do
+  string "read" >> space
+  userName <- parseUserName
+  endCmd
+  return $ Read userName
+
+-- | Parses send command.
+parseSend :: Parser Command
+parseSend = do
+  string "send" >> space
+  userName <- parseUserName
+  msg <- parseMessage
+  endCmd
+  return $ Send userName msg
+
+endCmd :: Parser ()
+endCmd = eof <|> void newline
 
 -- | Parses user name.
 parseUserName :: Parser UserName
@@ -74,3 +102,10 @@ parseUserName = do
   if length uname < 3
     then fail "User name should be at least 3 characters long."
     else return uname
+
+-- | Parsess user message.
+parseMessage :: Parser Message
+parseMessage = do
+  skipMany space
+  msg <- manyTill anyChar (void newline <|> eof)
+  return msg
