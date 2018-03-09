@@ -61,15 +61,26 @@ startServer con port = do
 handleClients :: Handler
 handleClients = forever $ do
   ci <- TR.ask
-  (soc, socadr) <- liftIO $ accept (getSocket ci)  
-  liftIO $ forkIO $ void $ evalRWST (handleClient >> closeConn)
+  (soc, socadr) <- liftIO $ accept (getSocket ci)
+  liftIO $ forkIO $ void $ evalRWST processSingleClient
                                     (mkEnv ci)
                                     (mkState soc socadr)
   where
     mkEnv (ConnectionInfo db _) = EnvInfo db
     mkState s a = ClientState s a
+
+-- | Process the newly connected client.
+processSingleClient :: ClientHandler ()
+processSingleClient = do
+  cs <- get
+  liftIO $ putStrLn $ "Connected: " ++ show (getSockAddr cs)
+  handleClient
+  closeConn
+  liftIO $ putStrLn $ "Disconnected: " ++ show (getSockAddr cs)
+  where
     closeConn = get >>= liftIO . close . getSock
 
+-- | The main client processing loop.
 handleClient :: ClientHandler ()
 handleClient = do
   cs <- get
