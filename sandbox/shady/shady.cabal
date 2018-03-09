@@ -25,3 +25,4 @@ library
                      , sqlite-simple
                      , text
                      , transformers
+                     , time
