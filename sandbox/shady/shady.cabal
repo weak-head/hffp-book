@@ -18,6 +18,7 @@ library
   exposed-modules:     Shady.Db
                      , Shady.Server
   other-modules:       Shady.Db.Queries
+                     , Shady.Server.Handle
   build-depends:       base >= 4.7 && < 5
                      , bytestring
                      , network
