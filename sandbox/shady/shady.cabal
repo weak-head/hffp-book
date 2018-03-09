@@ -19,6 +19,7 @@ library
                      , Shady.Server
   other-modules:       Shady.Db.Queries
                      , Shady.Server.Handle
+                     , Shady.Server.Commands
   build-depends:       base >= 4.7 && < 5
                      , bytestring
                      , network
@@ -27,3 +28,4 @@ library
                      , text
                      , transformers
                      , time
+                     , trifecta
