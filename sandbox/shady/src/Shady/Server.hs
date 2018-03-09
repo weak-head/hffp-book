@@ -5,6 +5,7 @@ module Shady.Server
   )
 where
 
+import           Data.Time.Clock ( getCurrentTime )
 import           Control.Concurrent
 import           Control.Monad
 import           Control.Monad.IO.Class ( liftIO )
@@ -41,7 +42,7 @@ data ClientState =
 type Handler = TR.ReaderT ConnectionInfo IO ()
 type ClientHandler a = RWST EnvInfo LogMessages ClientState IO a
 
-type LogMessages = [String] -- ListD
+type LogMessages = [String] -- Data.ListD
 type DbConnInfo  = String
 type Port        = Int
 
@@ -73,12 +74,11 @@ handleClients = forever $ do
 processSingleClient :: ClientHandler ()
 processSingleClient = do
   cs <- get
-  liftIO $ putStrLn $ "Connected: " ++ show (getSockAddr cs)
+  let sadr = show (getSockAddr cs)
+  writeLog $ "Connected: " ++ sadr
   handleClient
-  closeConn
-  liftIO $ putStrLn $ "Disconnected: " ++ show (getSockAddr cs)
-  where
-    closeConn = get >>= liftIO . close . getSock
+  liftIO . close . getSock $ cs
+  writeLog $ "Disconnected: " ++ sadr
 
 -- | The main client processing loop.
 handleClient :: ClientHandler ()
@@ -86,6 +86,14 @@ handleClient = do
   cs <- get
   cmd <- liftIO $ NBS.recv (getSock cs) 1024
   liftIO $ print $ decodeUtf8 cmd
+
+-- | Write log entry
+writeLog :: String -> ClientHandler ()
+writeLog s = do
+  now <- liftIO getCurrentTime
+  let str = show now ++ " - " ++ s
+  liftIO $ putStrLn str
+  tell [str]
 
 -- | Gets address to bind the socket.
 getAddress :: Port -> IO AddrInfo
