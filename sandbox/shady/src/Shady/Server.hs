@@ -51,8 +51,14 @@ handleClients = forever $ do
                                     (mkEnv ci)
                                     (mkState soc socadr)
   where
-    mkEnv (ConnectionInfo db _) = EnvInfo db
-    mkState s a = ClientState s a
+    mkEnv (ConnectionInfo db _) =
+      EnvInfo { getDatabaseCon = db }
+    mkState s a =
+      ClientState { getSock = s
+                  , getSockAddr = a
+                  , isAuth = False
+                  , isAlive = True
+                  }
 
 -- | Process the newly connected client.
 processSingleClient :: ClientHandler ()

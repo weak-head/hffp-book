@@ -29,3 +29,4 @@ library
                      , transformers
                      , time
                      , trifecta
+                     , monad-loops
