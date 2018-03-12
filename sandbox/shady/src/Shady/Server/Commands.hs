@@ -1,6 +1,7 @@
 module Shady.Server.Commands
   (
     Command (..)
+
   , parseCommand
   , parseCommandStr
   )

@@ -39,6 +39,7 @@ startServer con port = do
   sock <- socket (addrFamily addr) Stream defaultProtocol
   bind sock (addrAddress addr)
   NS.listen sock 5
+  putStrLn $ "The server is running on " ++ show port
   TR.runReaderT handleClients (ConnectionInfo con sock)
   close sock
 

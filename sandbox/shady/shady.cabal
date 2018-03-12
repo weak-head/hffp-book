@@ -30,3 +30,4 @@ library
                      , time
                      , trifecta
                      , monad-loops
+                     , containers
