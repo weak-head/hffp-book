@@ -10,6 +10,7 @@ executable shad
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
                      , shady
+                     , sqlite-simple
 
 library
   build-depends:       base >=4.8 && <5.0
@@ -18,6 +19,7 @@ library
   exposed-modules:     Shady.Db
                      , Shady.Server
   other-modules:       Shady.Db.Queries
+                     , Shady.Db.Model
                      , Shady.Server.Handle
                      , Shady.Server.Commands
   build-depends:       base >= 4.7 && < 5

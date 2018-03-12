@@ -4,6 +4,9 @@
 module Shady.Db.Queries
   ( createUsers
   , createMessages
+  ----------------
+  , insertUser
+  , getUserByLogin
   )
 where
 
@@ -33,3 +36,17 @@ CREATE TABLE IF NOT EXISTS messages
  );
 |]
 
+-- | Insert new user.
+insertUser :: Query
+insertUser = [r|
+INSERT INTO users
+VALUES (?, ?, ?)
+|]
+
+-- | Get user by login.
+getUserByLogin :: Query
+getUserByLogin = [r|
+SELECT *
+FROM users AS u
+WHERE u.login = ?
+|]

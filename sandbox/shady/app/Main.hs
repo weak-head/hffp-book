@@ -1,10 +1,12 @@
 module Main where
 
+import Database.SQLite.Simple
 import Shady.Server
 import Shady.Db
 
 main :: IO ()
 main = do
-  initDb
-  startServer "" 4343
-  putStrLn someFunc
+  let dbCon = "shady.db"
+      port  = 4343
+  withConnection dbCon initDb
+  startServer dbCon port
