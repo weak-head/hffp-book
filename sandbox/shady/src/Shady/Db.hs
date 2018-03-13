@@ -4,6 +4,7 @@ import Data.Maybe ( isJust )
 import Control.Exception
 import Data.Time.Clock
 import Shady.Db.Model
+import Shady.Db.Exception
 import Database.SQLite.Simple
 import Database.SQLite.Simple.Types
 import qualified Shady.Db.Queries as Q
@@ -20,7 +21,7 @@ createUser :: String -> Connection -> IO ()
 createUser userName con = do
   exists <- userExists userName con
   if exists
-    then putStrLn "User exists" -- throw
+    then throwIO $ ItemAlreadyExistsException userName
     else do
       now <- getCurrentTime
       execute con Q.insertUser (Null, userName, now)

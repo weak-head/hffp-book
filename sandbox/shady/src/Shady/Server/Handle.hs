@@ -13,6 +13,7 @@ module Shady.Server.Handle
   )
 where
 
+import           Control.Exception hiding ( handle )
 import           Control.Monad ( void )
 import           Control.Monad.IO.Class ( liftIO )
 import           Control.Monad.Loops ( iterateWhile )
@@ -28,6 +29,7 @@ import           Network.Socket
 import qualified Network.Socket as NS
 import qualified Network.Socket.ByteString as NBS
 import qualified Shady.Db as DB
+import           Shady.Db.Exception
 import           Shady.Server.Commands
 ----------------------------------------
 
@@ -103,7 +105,10 @@ registerHandler :: String -> ClientHandler ()
 registerHandler userName = do
   ei <- ask
   let dbCon = getDatabaseCon ei
-  liftIO $ withConnection dbCon (DB.createUser userName)
+  liftIO $ withConnection dbCon (DB.createUser userName) `catch` handleEx 
+  where
+    handleEx :: ItemAlreadyExistsException -> IO ()
+    handleEx = print
 
 loginHandler :: String -> ClientHandler ()
 loginHandler = undefined
