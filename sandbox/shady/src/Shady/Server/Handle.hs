@@ -36,10 +36,10 @@ import           Shady.Server.Commands
 
 -- | The state of the connected client.
 data ClientState =
-  ClientState { getSock :: Socket
-              , getSockAddr :: SockAddr
-              , isAuth :: Bool
-              , isAlive :: Bool }
+  ClientState { csGetSock     :: Socket
+              , csGetSockAddr :: SockAddr
+              , csUserLogin   :: Maybe String
+              , csIsAlive     :: Bool }
   deriving (Eq, Show)
 
 -- | Represents the environment information:
@@ -47,7 +47,7 @@ data ClientState =
 --   - arguments
 --   - etc
 data EnvInfo =
-  EnvInfo { getDatabaseCon :: DbConnInfo }
+  EnvInfo { eiGetDatabaseCon :: DbConnInfo }
   deriving (Eq, Show)
 
 type DbConnInfo      = String
@@ -58,7 +58,7 @@ type ClientHandler a = RWST EnvInfo LogMessages ClientState IO a
 
 -- | The main client processing loop.
 handleClient :: ClientHandler ()
-handleClient = void $ iterateWhile isAlive $ do
+handleClient = void $ iterateWhile csIsAlive $ do
   readCommand >>= handleCommand
   get
 
@@ -89,7 +89,7 @@ registerHandler userName = do
   ei <- ask
 
   let
-      dbCon      = getDatabaseCon ei
+      dbCon      = eiGetDatabaseCon ei
       createUser = do
         liftIO $ withConnection dbCon (DB.createUser userName)
         respondClient $ concat [ "<"
@@ -109,11 +109,12 @@ registerHandler userName = do
                        ]
       respondLogError msg
 
+-- | Login with existing user.
 loginHandler :: String -> ClientHandler ()
-loginHandler = undefined
+loginHandler userName = undefined
 
 logoutHandler :: ClientHandler ()
-logoutHandler = modify $ \cs -> cs { isAlive = False }
+logoutHandler = modify $ \cs -> cs { csIsAlive = False }
 
 readHandler :: String -> ClientHandler ()
 readHandler from = undefined
@@ -128,20 +129,20 @@ respondLogError :: String -> ClientHandler ()
 respondLogError msg = do
   cs <- get
   writeLog msg
-  writeSocket (getSock cs) msg
+  writeSocket (csGetSock cs) msg
 
 -- | Respond to client with general message.
 respondClient :: String -> ClientHandler ()
 respondClient msg = do
   cs <- get
-  writeSocket (getSock cs) msg
+  writeSocket (csGetSock cs) msg
 
 ----------------------------------------
 
 -- | Gets input from client and parses into command.
 readCommand :: ClientHandler (Either String Command)
 readCommand = do
-  cmdStr <- get >>= readSocket . getSock
+  cmdStr <- get >>= readSocket . csGetSock
   lift . return $ parseCommand cmdStr
 
 -- | Read input from socket.

@@ -22,8 +22,8 @@ import           Shady.Server.Handle
 -- | Contains the information about the socket and
 -- database connection.
 data ConnectionInfo =
-  ConnectionInfo { getDbInfo :: DbConnInfo
-                 , getSocket :: Socket }
+  ConnectionInfo { ciGetDbInfo :: DbConnInfo
+                 , ciGetSocket :: Socket }
   deriving (Eq, Show)
 
 type Handler = TR.ReaderT ConnectionInfo IO ()
@@ -47,28 +47,28 @@ startServer con port = do
 handleClients :: Handler
 handleClients = forever $ do
   ci <- TR.ask
-  (soc, socadr) <- liftIO $ accept (getSocket ci)
+  (soc, socadr) <- liftIO $ accept (ciGetSocket ci)
   liftIO $ forkIO $ void $ evalRWST processSingleClient
                                     (mkEnv ci)
                                     (mkState soc socadr)
   where
     mkEnv (ConnectionInfo db _) =
-      EnvInfo { getDatabaseCon = db }
+      EnvInfo { eiGetDatabaseCon = db }
     mkState s a =
-      ClientState { getSock = s
-                  , getSockAddr = a
-                  , isAuth = False
-                  , isAlive = True
+      ClientState { csGetSock     = s
+                  , csGetSockAddr = a
+                  , csIsAlive     = True
+                  , csUserLogin   = Nothing
                   }
 
 -- | Process the newly connected client.
 processSingleClient :: ClientHandler ()
 processSingleClient = do
   cs <- get
-  let sadr = show (getSockAddr cs)
+  let sadr = show (csGetSockAddr cs)
   writeLog $ "Connected: " ++ sadr
   handleClient
-  liftIO . close . getSock $ cs
+  liftIO . close . csGetSock $ cs
   writeLog $ "Disconnected: " ++ sadr
 
 -- | Gets address to bind the socket.
