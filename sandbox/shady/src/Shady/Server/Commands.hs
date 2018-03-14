@@ -69,10 +69,14 @@ parseLogin = do
 -- | Parses logout command.
 parseLogout :: Parser Command
 parseLogout =
-  string "logout" >>
+  logoutCmd >>
   skipMany space >>
   endCmd >>
   return Logout
+  where
+    logoutCmd = string "logout"
+            <|> string "exit"
+            <|> string "quit"
 
 -- | Parses read command.
 parseRead :: Parser Command
