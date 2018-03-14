@@ -34,3 +34,4 @@ library
                      , trifecta
                      , monad-loops
                      , containers
+                     , exceptions
