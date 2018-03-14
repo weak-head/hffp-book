@@ -23,6 +23,7 @@ import           Control.Monad.Trans.RWS
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Map as DM
+import           Data.Maybe
 import           Data.Text.Encoding ( decodeUtf8, encodeUtf8 )
 import           Data.Time.Clock ( getCurrentTime )
 import           Database.SQLite.Simple
@@ -111,7 +112,34 @@ registerHandler userName = do
 
 -- | Login with existing user.
 loginHandler :: String -> ClientHandler ()
-loginHandler userName = undefined
+loginHandler userName = do
+  cs <- get
+  if isJust . csUserLogin $ cs
+    then
+      respondLogError $ concat [ "You are alreadey logged in as <"
+                               , fromJust . csUserLogin $ cs
+                               , ">\n"
+                               ]
+    else do
+      ei <- ask
+      let
+          dbCon = eiGetDatabaseCon ei
+          getUsr = liftIO $ withConnection dbCon (DB.getUserByLogin userName)
+
+      usr <- getUsr
+      case usr of
+        -- here it would be good to have a check
+        -- to figure out if the user is already used
+        -- and logged-in from some other IP
+        Just _ -> do
+          put $ cs { csUserLogin = Just userName }
+          respondClient "[Success]\n"
+
+        Nothing -> do
+          respondLogError $ concat [ "Failed to login. User <"
+                                   , userName
+                                   , "> does not exist.\n"
+                                   ]
 
 logoutHandler :: ClientHandler ()
 logoutHandler = modify $ \cs -> cs { csIsAlive = False }
