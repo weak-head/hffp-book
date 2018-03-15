@@ -26,6 +26,18 @@ createUser userName con = do
       now <- getCurrentTime
       execute con Q.insertUser (Null, userName, now)
 
+createMessage :: Integer        -- From
+              -> Integer        -- To
+              -> String         -- Message
+              -> Connection
+              -> IO ()
+createMessage fromUser toUser message con = do
+  fromExists <- isJust <$> getUserById fromUser con
+  toExists   <- isJust <$> getUserById toUser con
+  if fromExists && toExists
+    then execute con Q.insertMessage (Null, fromUser, toUser, message)
+    else throwIO $ ItemDoesNotExistException (show toUser)
+
 -- | Returns true if the user with the name exists.
 userExists :: String -> Connection -> IO Bool
 userExists userName con =
@@ -39,3 +51,10 @@ getUserByLogin userName con = do
     []     -> return Nothing
     [user] -> return $ Just user
 --    _      -> throw
+
+getUserById :: Integer -> Connection -> IO (Maybe User)
+getUserById userId con = do
+  res <- query con Q.getUserById (Only userId)
+  case res of
+    []     -> return Nothing
+    [user] -> return $ Just user

@@ -31,6 +31,7 @@ import           Network.Socket
 import qualified Network.Socket as NS
 import qualified Network.Socket.ByteString as NBS
 import qualified Shady.Db as DB
+import qualified Shady.Db.Model as DBM
 import           Shady.Db.Exception
 import           Shady.Server.Commands
 ----------------------------------------
@@ -121,12 +122,7 @@ loginHandler userName = do
                                , ">\n"
                                ]
     else do
-      ei <- ask
-      let
-          dbCon = eiGetDatabaseCon ei
-          getUsr = liftIO $ withConnection dbCon (DB.getUserByLogin userName)
-
-      usr <- getUsr
+      usr <- getUser userName
       case usr of
         -- here it would be good to have a check
         -- to figure out if the user is already used
@@ -148,7 +144,23 @@ readHandler :: String -> ClientHandler ()
 readHandler from = undefined
 
 sendHandler :: String -> String -> ClientHandler ()
-sendHandler to msg = undefined
+sendHandler to msg = do
+  whenAuthenticated sendMsg requestLogin
+
+  where
+    sendMsg from = do
+      fromUsr <- getUser from
+      toUsr   <- getUser to
+
+      case toUsr of
+        Nothing     -> respondLogError "The specified user does not exist."
+        Just toName -> do
+          undefined
+
+    requestLogin = do
+      -- here we can request user to login and retry
+      -- without leaving the handler
+      respondLogError "Please login before sending a message.\n"
 
 ----------------------------------------
 
@@ -182,6 +194,20 @@ writeSocket :: Socket -> String -> ClientHandler ()
 writeSocket sock msg = liftIO $ NBS.sendAll sock (BSC.pack msg)
 
 ----------------------------------------
+
+getUser :: String -> ClientHandler (Maybe DBM.User)
+getUser userName = do
+  dbCon <- eiGetDatabaseCon <$> ask
+  liftIO $ withConnection dbCon (DB.getUserByLogin userName)
+
+----------------------------------------
+
+whenAuthenticated :: (String -> ClientHandler ()) -> ClientHandler () -> ClientHandler ()
+whenAuthenticated hld err = do
+  curUsr <- csUserLogin <$> get
+  case curUsr of
+    Just userName -> hld userName
+    Nothing       -> err
 
 -- | Writes log entry to console and to writer.
 writeLog :: String -> ClientHandler ()

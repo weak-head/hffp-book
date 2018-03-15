@@ -52,3 +52,11 @@ data ItemAlreadyExistsException =
 instance Exception ItemAlreadyExistsException where
   toException = dbDataExceptionToException
   fromException = dbDataExceptionFromException
+
+data ItemDoesNotExistException =
+  ItemDoesNotExistException { item :: String }
+  deriving (Show)
+
+instance Exception ItemDoesNotExistException where
+  toException = dbDataExceptionToException
+  fromException = dbDataExceptionFromException

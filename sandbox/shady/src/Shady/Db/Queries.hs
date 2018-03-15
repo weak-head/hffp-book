@@ -6,7 +6,10 @@ module Shady.Db.Queries
   , createMessages
   ----------------
   , insertUser
+  , insertMessage
+  ----------------
   , getUserByLogin
+  , getUserById
   )
 where
 
@@ -43,10 +46,25 @@ INSERT INTO users
 VALUES (?, ?, ?)
 |]
 
+-- | Insert new message.  
+insertMessage :: Query
+insertMessage = [r|
+INSERT INTO messages
+VALUES (?, ?, ?, ?)
+|]
+
 -- | Get user by login.
 getUserByLogin :: Query
 getUserByLogin = [r|
 SELECT *
 FROM users AS u
 WHERE u.login = ?
+|]
+
+-- | Get user by id.
+getUserById :: Query
+getUserById = [r|
+SELECT *
+FROM users AS u
+WHERE u.id = ?
 |]
