@@ -88,10 +88,9 @@ parsingErrorHandler _ = do
 -- | Register a new user.
 registerHandler :: String -> ClientHandler ()
 registerHandler userName = do
-  ei <- ask
+  dbCon <- eiGetDatabaseCon <$> ask
 
   let
-      dbCon      = eiGetDatabaseCon ei
       createUser = do
         liftIO $ withConnection dbCon (DB.createUser userName)
         respondClient $ concat [ "<"
@@ -143,19 +142,34 @@ logoutHandler = modify $ \cs -> cs { csIsAlive = False }
 readHandler :: String -> ClientHandler ()
 readHandler from = undefined
 
-sendHandler :: String -> String -> ClientHandler ()
+-- | Leave a message to the user.
+sendHandler :: String           -- To user
+            -> String           -- Message body
+            -> ClientHandler ()
 sendHandler to msg = do
   whenAuthenticated sendMsg requestLogin
 
   where
     sendMsg from = do
-      fromUsr <- getUser from
-      toUsr   <- getUser to
+      maybeFromUser <- getUser from
+      maybeToUser   <- getUser to
 
-      case toUsr of
-        Nothing     -> respondLogError "The specified user does not exist."
-        Just toName -> do
-          undefined
+      case maybeToUser of
+        Nothing     -> respondLogError "The specified user does not exist.\n"
+        Just toUser -> do
+          dbCon <- eiGetDatabaseCon <$> ask
+
+          let
+            fromId        = DBM.userId $ fromJust maybeFromUser
+            toId          = DBM.userId toUser
+            createMessage = do
+              liftIO $ withConnection dbCon (DB.createMessage fromId toId msg)
+              respondClient "[Success]\n"
+
+          createMessage `MC.catch` handleEx
+
+    handleEx :: ItemDoesNotExistException -> ClientHandler ()
+    handleEx _ = respondLogError "We should never see this"
 
     requestLogin = do
       -- here we can request user to login and retry
