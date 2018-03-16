@@ -31,8 +31,8 @@ import           Network.Socket
 import qualified Network.Socket as NS
 import qualified Network.Socket.ByteString as NBS
 import qualified Shady.Db as DB
-import qualified Shady.Db.Model as DBM
 import           Shady.Db.Exception
+import qualified Shady.Db.Model as DBM
 import           Shady.Server.Commands
 ----------------------------------------
 
@@ -140,7 +140,39 @@ logoutHandler :: ClientHandler ()
 logoutHandler = modify $ \cs -> cs { csIsAlive = False }
 
 readHandler :: String -> ClientHandler ()
-readHandler from = undefined
+readHandler from = do
+  whenAuthenticated getMsgs requestLogin
+
+  where
+    getMsgs to = do
+      maybeFromUser <- getUser from
+      maybeToUser   <- getUser to
+
+      case maybeFromUser of
+        Nothing       -> respondLogError "The specified user does not exist.\n"
+        Just fromUser -> do
+          dbCon <- eiGetDatabaseCon <$> ask
+
+          let
+            fromId        = DBM.userId fromUser
+            toId          = DBM.userId $ fromJust maybeToUser
+            getMessages = do
+              liftIO $ withConnection dbCon (DB.getAllMessagesByUsers fromId toId)
+              
+
+          msgs <- getMessages `MC.catch` handleEx
+--          liftIO $ respondClient $ intersperse "\n" (map DBM.msg msgs)
+          
+          return ()
+
+    -- we can use here something like (Either Error [Messages])
+    handleEx :: ItemDoesNotExistException -> ClientHandler [DBM.Message]
+    handleEx _ = respondLogError "We should never see this" >> return []
+
+    requestLogin = do
+      -- here we can request user to login and retry
+      -- without leaving the handler
+      respondLogError "Please login before sending a message.\n"
 
 -- | Leave a message to the user.
 sendHandler :: String           -- To user

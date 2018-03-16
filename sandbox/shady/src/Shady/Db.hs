@@ -38,6 +38,17 @@ createMessage fromUser toUser message con = do
     then execute con Q.insertMessage (Null, fromUser, toUser, message)
     else throwIO $ ItemDoesNotExistException (show toUser)
 
+getAllMessagesByUsers :: Integer -- Sender id
+                      -> Integer -- Receiver id
+                      -> Connection
+                      -> IO [Message]
+getAllMessagesByUsers senderId receiverId con = do
+  senderExists   <- isJust <$> getUserById senderId con
+  receiverExists <- isJust <$> getUserById receiverId con
+  if senderExists && receiverExists
+    then query con Q.getAllMessagesByUsers (senderId, receiverId)
+    else throwIO $ ItemDoesNotExistException (show receiverId)
+                      
 -- | Returns true if the user with the name exists.
 userExists :: String -> Connection -> IO Bool
 userExists userName con =

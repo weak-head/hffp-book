@@ -7,6 +7,7 @@ module Shady.Db.Queries
   ----------------
   , insertUser
   , insertMessage
+  , getAllMessagesByUsers
   ----------------
   , getUserByLogin
   , getUserById
@@ -53,6 +54,13 @@ INSERT INTO messages
 VALUES (?, ?, ?, ?)
 |]
 
+getAllMessagesByUsers :: Query
+getAllMessagesByUsers = [r|
+SELECT *
+FROM messages AS m
+WHERE m.sender = ? AND m.receiver = ?
+|]
+  
 -- | Get user by login.
 getUserByLogin :: Query
 getUserByLogin = [r|
