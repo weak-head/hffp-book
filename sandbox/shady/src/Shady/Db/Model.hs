@@ -8,16 +8,16 @@ import Database.SQLite.Simple
 import Data.Text
 
 data User =
-  User { userId :: Integer
-       , login :: Text
+  User { userId  :: Integer
+       , login   :: Text
        , regDate :: Text
        } deriving (Eq, Show)
 
 data Message =
   Message { messageId :: Integer
-          , sender :: Text
-          , receiver :: Text
-          , msg :: Text
+          , sender    :: Integer
+          , receiver  :: Integer
+          , msg       :: Text
           } deriving (Eq, Show)
 
 instance FromRow User where

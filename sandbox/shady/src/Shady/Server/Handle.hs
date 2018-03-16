@@ -24,6 +24,8 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BSC
 import qualified Data.Map as DM
 import           Data.Maybe
+import qualified Data.Text as TXT
+import qualified Data.List as LST
 import           Data.Text.Encoding ( decodeUtf8, encodeUtf8 )
 import           Data.Time.Clock ( getCurrentTime )
 import           Database.SQLite.Simple
@@ -158,12 +160,9 @@ readHandler from = do
             toId          = DBM.userId $ fromJust maybeToUser
             getMessages = do
               liftIO $ withConnection dbCon (DB.getAllMessagesByUsers fromId toId)
-              
 
           msgs <- getMessages `MC.catch` handleEx
---          liftIO $ respondClient $ intersperse "\n" (map DBM.msg msgs)
-          
-          return ()
+          respondClient $ LST.intercalate "\n" (map (TXT.unpack . DBM.msg) msgs)
 
     -- we can use here something like (Either Error [Messages])
     handleEx :: ItemDoesNotExistException -> ClientHandler [DBM.Message]
