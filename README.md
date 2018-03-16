@@ -34,3 +34,6 @@ Monad transformers:
 
 Exceptions:
 * [Exception hierarchy](ch30-when-things-go-wrong/src/Hierarchy.hs)
+
+Others:
+* [Very simple TCP based server that uses SQLite and RWST monad](sandbox/shady)
